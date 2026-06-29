@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'records_page.dart';
 import 'settings_page.dart';
+import 'settingScreen.dart';
+import 'studentListScreen.dart';
+import 'teacherListScreen.dart';
+import 'timetableListScreen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -52,30 +56,105 @@ class _HomeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final menuItems = [
+      _MenuItem(
+        icon: Icons.school,
+        label: 'Students',
+        destination: const StudentListScreen(),
+      ),
+      _MenuItem(
+        icon: Icons.person,
+        label: 'Teachers',
+        destination: const TeacherListScreen(),
+      ),
+      _MenuItem(
+        icon: Icons.calendar_month,
+        label: 'Timetables',
+        destination: const TimetableListScreen(),
+      ),
+      _MenuItem(
+        icon: Icons.settings,
+        label: 'Setting',
+        destination: const SettingScreen(),
+      ),
+    ];
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(
-            Icons.home,
-            size: 92,
-            color: Theme.of(context).colorScheme.primary,
-          ),
           const SizedBox(height: 24),
-          const Text(
-            'Welcome to the home screen!',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Select a section using the footer navigation bar.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, color: Colors.black54),
+          Expanded(
+            child: GridView.count(
+              crossAxisCount: 3,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 0.8,
+              children: menuItems
+                  .map((item) => _MenuCard(menuItem: item))
+                  .toList(),
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MenuItem {
+  final IconData icon;
+  final String label;
+  final Widget destination;
+
+  const _MenuItem({
+    required this.icon,
+    required this.label,
+    required this.destination,
+  });
+}
+
+class _MenuCard extends StatelessWidget {
+  final _MenuItem menuItem;
+
+  const _MenuCard({required this.menuItem});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(16),
+      elevation: 2,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => menuItem.destination),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                menuItem.icon,
+                size: 36,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                menuItem.label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
