@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'records_page.dart';
 import 'settings_page.dart';
-import 'settingScreen.dart';
-import 'studentListScreen.dart';
-import 'teacherListScreen.dart';
-import 'timetableListScreen.dart';
+import 'setting_screen.dart';
+import 'student_list_screen.dart';
+import 'teacher_list_screen.dart';
+import 'timetable_list_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,7 +17,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  static const _pageTitles = ['Home', 'Student Records', 'Settings'];
+  static const _pageTitles = [
+    'Royal Hanthawaddy ISM',
+    'Student Records',
+    'Settings',
+  ];
 
   static const _navigationItems = [
     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
