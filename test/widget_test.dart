@@ -5,26 +5,40 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:hism_management_system/main.dart';
+import 'package:hism_management_system/models/student.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('Student list helpers', () {
+    test('parses common student fields from Supabase rows', () {
+      final student = Student.fromMap({
+        'student_id': 'ST-001',
+        'student_name': 'Aye Aye',
+        'parent_name': 'Maung Maung',
+        'year': 'Grade 4',
+        'photo_url': 'https://example.com/photo.jpg',
+      });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      expect(student.id, 'ST-001');
+      expect(student.name, 'Aye Aye');
+      expect(student.parentName, 'Maung Maung');
+      expect(student.year, 'Grade 4');
+      expect(student.photoUrl, 'https://example.com/photo.jpg');
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    test('matches search queries across id, name, parent name, and year', () {
+      final student = Student.fromMap({
+        'student_id': 'ST-001',
+        'student_name': 'Aye Aye',
+        'parent_name': 'Maung Maung',
+        'year': 'Grade 4',
+      });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      expect(student.matchesSearch('st-001'), isTrue);
+      expect(student.matchesSearch('aye'), isTrue);
+      expect(student.matchesSearch('maung'), isTrue);
+      expect(student.matchesSearch('grade 4'), isTrue);
+      expect(student.matchesSearch('unknown'), isFalse);
+    });
   });
 }

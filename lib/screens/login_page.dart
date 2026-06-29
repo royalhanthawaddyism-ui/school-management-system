@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'home_page.dart';
+import 'package:hism_management_system/controllers/login_controller.dart';
+import 'package:hism_management_system/screens/home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,7 +13,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final supabase = Supabase.instance.client;
+  final _controller = LoginController();
   bool _isPasswordVisible = false;
 
   @override
@@ -27,9 +27,9 @@ class _LoginPageState extends State<LoginPage> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     try {
-      await supabase.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      await _controller.signIn(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
 
       if (!mounted) return;
@@ -85,10 +85,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        //backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Royal Hanthawaddy ISM'),
-      ),
+      appBar: AppBar(title: const Text('Royal Hanthawaddy ISM')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),

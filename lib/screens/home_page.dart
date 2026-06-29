@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'records_page.dart';
-import 'settings_page.dart';
-import 'setting_screen.dart';
-import 'student_list_screen.dart';
-import 'teacher_list_screen.dart';
-import 'timetable_list_screen.dart';
+import 'package:hism_management_system/screens/records_page.dart';
+import 'package:hism_management_system/screens/settings_page.dart';
+import 'package:hism_management_system/screens/setting_screen.dart';
+import 'package:hism_management_system/screens/student_list_screen.dart';
+import 'package:hism_management_system/screens/teacher_list_screen.dart';
+import 'package:hism_management_system/screens/timetable_list_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

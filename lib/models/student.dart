@@ -1,0 +1,130 @@
+class Student {
+  const Student({
+    required this.id,
+    required this.name,
+    required this.parentName,
+    required this.year,
+    required this.photoUrl,
+  });
+
+  final String id;
+  final String name;
+  final String parentName;
+  final String year;
+  final String photoUrl;
+
+  factory Student.fromMap(Map<String, dynamic> data) {
+    String _firstNonEmptyString(Map<String, dynamic> data, List<String> keys) {
+      for (final key in keys) {
+        final value = data[key];
+        if (value is String && value.trim().isNotEmpty) return value.trim();
+        if (value is Map) {
+          for (final nestedKey in ['name', 'title', 'year', 'class', 'grade']) {
+            final nested = value[nestedKey];
+            if (nested is String && nested.trim().isNotEmpty)
+              return nested.trim();
+            if (nested != null) return nested.toString().trim();
+          }
+        }
+        if (value is List && value.isNotEmpty) {
+          final first = value.first;
+          if (first is String && first.trim().isNotEmpty) return first.trim();
+          if (first is Map) {
+            for (final nestedKey in [
+              'name',
+              'title',
+              'year',
+              'class',
+              'grade',
+            ]) {
+              final nested = first[nestedKey];
+              if (nested is String && nested.trim().isNotEmpty)
+                return nested.trim();
+              if (nested != null) return nested.toString().trim();
+            }
+          }
+        }
+        if (value != null) return value.toString().trim();
+      }
+      return '';
+    }
+
+    final id = _firstNonEmptyString(data, ['id', 'student_id', 'studentId']);
+    final name = _firstNonEmptyString(data, [
+      'name',
+      'student_name',
+      'studentName',
+    ]);
+    final parentName = _firstNonEmptyString(data, [
+      'parent_name',
+      'parentName',
+      'guardian_name',
+      'guardianName',
+      'father_name',
+      'mother_name',
+    ]);
+
+    var year = _firstNonEmptyString(data, [
+      'year',
+      'class_year',
+      'classYear',
+      'grade_year',
+      'gradeYear',
+      'class',
+      'class_name',
+      'className',
+      'standard',
+      'grade',
+      'form',
+      'level',
+      'student_class',
+    ]);
+
+    if (year.isEmpty) {
+      final nested = data['years'] ?? data['year'];
+      if (nested is List && nested.isNotEmpty) {
+        final first = nested.first;
+        if (first is Map<String, dynamic>) {
+          year = _firstNonEmptyString(first, [
+            'name',
+            'year',
+            'title',
+            'class',
+          ]);
+        } else if (first is String) {
+          year = first.trim();
+        }
+      } else if (nested is Map<String, dynamic>) {
+        year = _firstNonEmptyString(nested, ['name', 'year', 'title', 'class']);
+      }
+    }
+
+    final photoUrl = _firstNonEmptyString(data, [
+      'photo_url',
+      'photoUrl',
+      'image_url',
+      'imageUrl',
+      'avatar_url',
+      'avatarUrl',
+      'profile_photo',
+      'photo',
+    ]);
+
+    return Student(
+      id: id,
+      name: name,
+      parentName: parentName,
+      year: year,
+      photoUrl: photoUrl,
+    );
+  }
+
+  bool matchesSearch(String query) {
+    final normalizedQuery = query.trim().toLowerCase();
+    if (normalizedQuery.isEmpty) return true;
+    final normalizedId = id.toLowerCase();
+    final normalizedName = name.toLowerCase();
+    return normalizedId.contains(normalizedQuery) ||
+        normalizedName.contains(normalizedQuery);
+  }
+}
