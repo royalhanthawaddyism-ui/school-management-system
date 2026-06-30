@@ -1,0 +1,87 @@
+import 'package:flutter/material.dart';
+import 'package:hism_management_system/models/student.dart';
+
+class StudentDetailScreen extends StatelessWidget {
+  const StudentDetailScreen({super.key, required this.student});
+
+  final Student student;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(student.name.isNotEmpty ? student.name : 'Student Details'),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 40,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                backgroundImage: student.photoUrl.isNotEmpty
+                    ? NetworkImage(student.photoUrl)
+                    : null,
+                child: student.photoUrl.isEmpty
+                    ? const Icon(Icons.person, size: 36)
+                    : null,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                student.name.isNotEmpty ? student.name : 'Unnamed student',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _InfoRow(
+                label: 'Student ID',
+                value: student.studentId.isNotEmpty ? student.studentId : 'N/A',
+              ),
+              _InfoRow(
+                label: 'Parent Name',
+                value: student.parentName.isNotEmpty
+                    ? student.parentName
+                    : 'N/A',
+              ),
+              _InfoRow(
+                label: 'Year',
+                value: student.year.isNotEmpty ? student.year : 'N/A',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          Expanded(child: Text(value)),
+        ],
+      ),
+    );
+  }
+}

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hism_management_system/models/student.dart';
+import 'package:hism_management_system/screens/student_detail_screen.dart';
 import 'package:hism_management_system/services/student_service.dart';
 
 class StudentListScreen extends StatefulWidget {
@@ -100,6 +101,15 @@ class _StudentListScreenState extends State<StudentListScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: ListTile(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    StudentDetailScreen(student: student),
+                              ),
+                            );
+                          },
                           contentPadding: const EdgeInsets.all(12),
                           leading: CircleAvatar(
                             radius: 28,
@@ -124,9 +134,8 @@ class _StudentListScreenState extends State<StudentListScreen> {
                             children: [
                               const SizedBox(height: 4),
                               Text(
-                                'ID: ${student.id.isNotEmpty ? student.id : 'N/A'}',
+                                'Student ID: ${student.studentId.isNotEmpty ? student.studentId : 'N/A'}',
                               ),
-                              // Parent name removed from list view per requirement
                               Text(
                                 'Year: ${student.year.isNotEmpty ? student.year : 'N/A'}',
                               ),

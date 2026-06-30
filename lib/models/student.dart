@@ -1,17 +1,19 @@
 class Student {
   const Student({
-    required this.id,
+    required this.studentId,
     required this.name,
     required this.parentName,
     required this.year,
     required this.photoUrl,
   });
 
-  final String id;
+  final String studentId;
   final String name;
   final String parentName;
   final String year;
   final String photoUrl;
+
+  String get id => studentId;
 
   factory Student.fromMap(Map<String, dynamic> data) {
     String _firstNonEmptyString(Map<String, dynamic> data, List<String> keys) {
@@ -49,7 +51,11 @@ class Student {
       return '';
     }
 
-    final id = _firstNonEmptyString(data, ['id', 'student_id', 'studentId']);
+    final studentId = _firstNonEmptyString(data, [
+      'student_id',
+      'studentId',
+      'id',
+    ]);
     final name = _firstNonEmptyString(data, [
       'name',
       'student_name',
@@ -111,7 +117,7 @@ class Student {
     ]);
 
     return Student(
-      id: id,
+      studentId: studentId,
       name: name,
       parentName: parentName,
       year: year,
@@ -122,9 +128,14 @@ class Student {
   bool matchesSearch(String query) {
     final normalizedQuery = query.trim().toLowerCase();
     if (normalizedQuery.isEmpty) return true;
-    final normalizedId = id.toLowerCase();
-    final normalizedName = name.toLowerCase();
-    return normalizedId.contains(normalizedQuery) ||
-        normalizedName.contains(normalizedQuery);
+
+    final searchFields = [
+      studentId,
+      name,
+      parentName,
+      year,
+    ].map((value) => value.toLowerCase());
+
+    return searchFields.any((value) => value.contains(normalizedQuery));
   }
 }
