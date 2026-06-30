@@ -1,0 +1,301 @@
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:hism_management_system/models/student.dart';
+import 'package:hism_management_system/services/student_service.dart';
+
+class StudentInsertScreen extends StatefulWidget {
+  const StudentInsertScreen({super.key});
+
+  @override
+  State<StudentInsertScreen> createState() => _StudentInsertScreenState();
+}
+
+class _StudentInsertScreenState extends State<StudentInsertScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _studentIdController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _parentNameController = TextEditingController();
+  final _dobController = TextEditingController();
+  final _addressController = TextEditingController();
+  final ImagePicker _imagePicker = ImagePicker();
+  XFile? _selectedPhoto;
+  String? _selectedGender;
+  String? _selectedYearId;
+  List<Map<String, dynamic>> _years = [];
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadYears();
+  }
+
+  @override
+  void dispose() {
+    _studentIdController.dispose();
+    _nameController.dispose();
+    _parentNameController.dispose();
+    _dobController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadYears() async {
+    try {
+      final years = await StudentService().fetchYears();
+      if (!mounted) return;
+      setState(() {
+        _years = years;
+        if (_years.isNotEmpty) {
+          _selectedYearId = _years.first['id'].toString();
+        }
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Unable to load years: $error')));
+    }
+  }
+
+  Future<void> _pickPhoto() async {
+    try {
+      final photo = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 100,
+      );
+      if (photo == null) {
+        return;
+      }
+
+      final photoBytes = await photo.readAsBytes();
+      final validationMessage = StudentService.validatePhotoSize(
+        photoBytes.length,
+      );
+      if (validationMessage != null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(validationMessage)));
+        return;
+      }
+
+      setState(() {
+        _selectedPhoto = photo;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Unable to choose photo: $error')));
+    }
+  }
+
+  Future<void> _saveStudent() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    final studentId = _studentIdController.text.trim();
+    final name = _nameController.text.trim();
+    final parentName = _parentNameController.text.trim();
+    final year = _selectedYearId ?? '';
+    final dob = _dobController.text.trim();
+    final address = _addressController.text.trim();
+    final gender = _selectedGender ?? '';
+
+    try {
+      String photoUrl = '';
+      if (_selectedPhoto != null) {
+        photoUrl = await StudentService().uploadStudentPhoto(
+          photo: _selectedPhoto!,
+          studentId: studentId,
+        );
+      }
+
+      final student = Student(
+        studentId: studentId,
+        name: name,
+        parentName: parentName,
+        year: year,
+        photoUrl: photoUrl,
+        dob: dob,
+        address: address,
+        gender: gender,
+      );
+
+      await StudentService().createStudent(student);
+      if (mounted) {
+        Navigator.pop(context, true);
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to save student: $error')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Add Student')),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              children: [
+                TextFormField(
+                  controller: _studentIdController,
+                  decoration: const InputDecoration(
+                    labelText: 'Student ID',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Student ID is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Name is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _parentNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Parent ID',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: _selectedYearId,
+                  decoration: const InputDecoration(
+                    labelText: 'Year',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: _years.map((year) {
+                    final yearId = year['id']?.toString() ?? '';
+                    final yearName = year['name']?.toString() ?? 'Unnamed year';
+                    return DropdownMenuItem<String>(
+                      value: yearId,
+                      child: Text(yearName),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedYearId = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Year is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedGender,
+                  decoration: const InputDecoration(
+                    labelText: 'Gender',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'Male', child: Text('Male')),
+                    DropdownMenuItem(value: 'Female', child: Text('Female')),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedGender = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Gender is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: _isSaving ? null : _pickPhoto,
+                  icon: const Icon(Icons.photo_camera),
+                  label: Text(
+                    _selectedPhoto == null
+                        ? 'Select Student Photo'
+                        : 'Change Student Photo',
+                  ),
+                ),
+                if (_selectedPhoto != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Selected: ${_selectedPhoto!.name}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Photo must be under 1 MB.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _dobController,
+                  decoration: const InputDecoration(
+                    labelText: 'Date of Birth',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _addressController,
+                  decoration: const InputDecoration(
+                    labelText: 'Address',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: _isSaving ? null : _saveStudent,
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          ),
+                        )
+                      : const Text('Save Student'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

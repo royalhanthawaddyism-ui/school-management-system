@@ -7,6 +7,7 @@ class Student {
     required this.photoUrl,
     this.dob = '',
     this.address = '',
+    this.gender = '',
   });
 
   final String studentId;
@@ -16,6 +17,7 @@ class Student {
   final String photoUrl;
   final String dob;
   final String address;
+  final String gender;
 
   String get id => studentId;
 
@@ -137,6 +139,13 @@ class Student {
       'current_address',
     ]);
 
+    final gender = firstNonEmptyString(data, [
+      'gender',
+      'sex',
+      'gender_label',
+      'genderName',
+    ]);
+
     return Student(
       studentId: studentId,
       name: name,
@@ -145,6 +154,7 @@ class Student {
       photoUrl: photoUrl,
       dob: dob,
       address: address,
+      gender: gender,
     );
   }
 

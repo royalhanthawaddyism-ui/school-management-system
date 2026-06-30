@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hism_management_system/models/student.dart';
 import 'package:hism_management_system/screens/student_detail_screen.dart';
+import 'package:hism_management_system/screens/student_insert_screen.dart';
 import 'package:hism_management_system/services/student_service.dart';
 
 class StudentListScreen extends StatefulWidget {
@@ -12,7 +13,7 @@ class StudentListScreen extends StatefulWidget {
 
 class _StudentListScreenState extends State<StudentListScreen> {
   final TextEditingController _searchController = TextEditingController();
-  late final Future<List<Student>> _studentsFuture;
+  late Future<List<Student>> _studentsFuture;
 
   @override
   void initState() {
@@ -42,7 +43,16 @@ class _StudentListScreenState extends State<StudentListScreen> {
       appBar: AppBar(title: const Text('Students')),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Add student action
+          Navigator.push<bool>(
+            context,
+            MaterialPageRoute(builder: (_) => const StudentInsertScreen()),
+          ).then((shouldRefresh) {
+            if (shouldRefresh == true) {
+              setState(() {
+                _studentsFuture = _fetchStudents();
+              });
+            }
+          });
         },
         child: const Icon(Icons.add),
       ),
