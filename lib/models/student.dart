@@ -20,15 +20,16 @@ class Student {
   String get id => studentId;
 
   factory Student.fromMap(Map<String, dynamic> data) {
-    String _firstNonEmptyString(Map<String, dynamic> data, List<String> keys) {
+    String firstNonEmptyString(Map<String, dynamic> data, List<String> keys) {
       for (final key in keys) {
         final value = data[key];
         if (value is String && value.trim().isNotEmpty) return value.trim();
         if (value is Map) {
           for (final nestedKey in ['name', 'title', 'year', 'class', 'grade']) {
             final nested = value[nestedKey];
-            if (nested is String && nested.trim().isNotEmpty)
+            if (nested is String && nested.trim().isNotEmpty) {
               return nested.trim();
+            }
             if (nested != null) return nested.toString().trim();
           }
         }
@@ -44,8 +45,9 @@ class Student {
               'grade',
             ]) {
               final nested = first[nestedKey];
-              if (nested is String && nested.trim().isNotEmpty)
+              if (nested is String && nested.trim().isNotEmpty) {
                 return nested.trim();
+              }
               if (nested != null) return nested.toString().trim();
             }
           }
@@ -55,17 +57,17 @@ class Student {
       return '';
     }
 
-    final studentId = _firstNonEmptyString(data, [
+    final studentId = firstNonEmptyString(data, [
       'student_id',
       'studentId',
       'id',
     ]);
-    final name = _firstNonEmptyString(data, [
+    final name = firstNonEmptyString(data, [
       'name',
       'student_name',
       'studentName',
     ]);
-    final parentName = _firstNonEmptyString(data, [
+    final parentName = firstNonEmptyString(data, [
       'parent_name',
       'parentName',
       'guardian_name',
@@ -74,7 +76,7 @@ class Student {
       'mother_name',
     ]);
 
-    var year = _firstNonEmptyString(data, [
+    var year = firstNonEmptyString(data, [
       'year',
       'class_year',
       'classYear',
@@ -95,21 +97,16 @@ class Student {
       if (nested is List && nested.isNotEmpty) {
         final first = nested.first;
         if (first is Map<String, dynamic>) {
-          year = _firstNonEmptyString(first, [
-            'name',
-            'year',
-            'title',
-            'class',
-          ]);
+          year = firstNonEmptyString(first, ['name', 'year', 'title', 'class']);
         } else if (first is String) {
           year = first.trim();
         }
       } else if (nested is Map<String, dynamic>) {
-        year = _firstNonEmptyString(nested, ['name', 'year', 'title', 'class']);
+        year = firstNonEmptyString(nested, ['name', 'year', 'title', 'class']);
       }
     }
 
-    final photoUrl = _firstNonEmptyString(data, [
+    final photoUrl = firstNonEmptyString(data, [
       'photo_url',
       'photoUrl',
       'image_url',
@@ -120,7 +117,7 @@ class Student {
       'photo',
     ]);
 
-    final dob = _firstNonEmptyString(data, [
+    final dob = firstNonEmptyString(data, [
       'dob',
       'date_of_birth',
       'dateOfBirth',
@@ -130,7 +127,7 @@ class Student {
       'date_of_birth_text',
     ]);
 
-    final address = _firstNonEmptyString(data, [
+    final address = firstNonEmptyString(data, [
       'address',
       'home_address',
       'homeAddress',
