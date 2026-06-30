@@ -5,7 +5,10 @@ class StudentService {
   final SupabaseClient _client = Supabase.instance.client;
 
   Future<List<Student>> fetchStudents() async {
-    final response = await _client.from('students').select('*, years(*)');
+    final response = await _client
+        .from('students')
+        .select('*, years(*)')
+        .eq('deleted', 0);
     final rows = (response as List).cast<Map<String, dynamic>>();
     return rows.map(Student.fromMap).toList();
   }
