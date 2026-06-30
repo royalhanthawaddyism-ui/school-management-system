@@ -38,18 +38,24 @@ class StudentDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               _InfoRow(
+                label: 'Name',
+                value: student.name.isNotEmpty ? student.name : 'N/A',
+              ),
+              _InfoRow(
                 label: 'Student ID',
                 value: student.studentId.isNotEmpty ? student.studentId : 'N/A',
               ),
               _InfoRow(
-                label: 'Parent Name',
-                value: student.parentName.isNotEmpty
-                    ? student.parentName
-                    : 'N/A',
-              ),
-              _InfoRow(
                 label: 'Year',
                 value: student.year.isNotEmpty ? student.year : 'N/A',
+              ),
+              _InfoRow(
+                label: 'D.O.B',
+                value: student.dob.isNotEmpty ? student.dob : 'N/A',
+              ),
+              _InfoRow(
+                label: 'Address',
+                value: student.address.isNotEmpty ? student.address : 'N/A',
               ),
             ],
           ),

@@ -5,6 +5,8 @@ class Student {
     required this.parentName,
     required this.year,
     required this.photoUrl,
+    this.dob = '',
+    this.address = '',
   });
 
   final String studentId;
@@ -12,6 +14,8 @@ class Student {
   final String parentName;
   final String year;
   final String photoUrl;
+  final String dob;
+  final String address;
 
   String get id => studentId;
 
@@ -116,12 +120,34 @@ class Student {
       'photo',
     ]);
 
+    final dob = _firstNonEmptyString(data, [
+      'dob',
+      'date_of_birth',
+      'dateOfBirth',
+      'birth_date',
+      'birthDate',
+      'birthday',
+      'date_of_birth_text',
+    ]);
+
+    final address = _firstNonEmptyString(data, [
+      'address',
+      'home_address',
+      'homeAddress',
+      'address_line',
+      'addressLine',
+      'permanent_address',
+      'current_address',
+    ]);
+
     return Student(
       studentId: studentId,
       name: name,
       parentName: parentName,
       year: year,
       photoUrl: photoUrl,
+      dob: dob,
+      address: address,
     );
   }
 
