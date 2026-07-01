@@ -17,10 +17,6 @@ class ParentService {
         .select('id')
         .single();
 
-    if (response == null) {
-      throw Exception('Failed to create parent');
-    }
-
     return response['id'].toString();
   }
 

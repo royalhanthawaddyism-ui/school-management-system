@@ -239,9 +239,9 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _selectedParentOption,
+                  initialValue: _selectedParentOption,
                   decoration: const InputDecoration(
-                    labelText: 'Parent Type',
+                    labelText: 'Parent Information',
                     border: OutlineInputBorder(),
                   ),
                   items: const [
@@ -265,7 +265,7 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Parent type is required';
+                      return 'Parent information is required';
                     }
                     return null;
                   },
@@ -294,7 +294,7 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _selectedYearId,
+                  initialValue: _selectedYearId,
                   decoration: const InputDecoration(
                     labelText: 'Year',
                     border: OutlineInputBorder(),

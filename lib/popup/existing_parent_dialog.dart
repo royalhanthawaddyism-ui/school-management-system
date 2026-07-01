@@ -43,8 +43,8 @@ class _ExistingParentDialogState extends State<ExistingParentDialog> {
       } else {
         final q = query.toLowerCase();
         parents = allParents.where((p) {
-          final name = (p.displayName ?? '').toLowerCase();
-          final phone = (p.phone ?? '').toLowerCase();
+          final name = (p.displayName).toLowerCase();
+          final phone = (p.phone).toLowerCase();
           return name.contains(q) || phone.contains(q);
         }).toList();
       }
@@ -55,6 +55,7 @@ class _ExistingParentDialogState extends State<ExistingParentDialog> {
     } catch (_) {
       if (!mounted) return;
     } finally {
+      // ignore: control_flow_in_finally
       if (!mounted) return;
       setState(() {
         _isLoading = false;
@@ -88,7 +89,7 @@ class _ExistingParentDialogState extends State<ExistingParentDialog> {
                     ? const Center(child: Text('No matching parents found.'))
                     : ListView.separated(
                         itemCount: _parents.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        separatorBuilder: (_, _) => const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final parent = _parents[index];
                           return ListTile(
