@@ -5,7 +5,7 @@ import 'package:hism_management_system/models/student.dart';
 class StudentService {
   static const int maxPhotoSizeBytes = 1024 * 1024;
 
-  final SupabaseClient _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
 
   Future<List<Student>> fetchStudents() async {
     final response = await _client

@@ -51,7 +51,9 @@ class StudentDetailScreen extends StatelessWidget {
               ),
               _InfoRow(
                 label: 'D.O.B',
-                value: student.dob.isNotEmpty ? student.dob : 'N/A',
+                value: student.dob.isNotEmpty
+                    ? _formatDate(student.dob)
+                    : 'N/A',
               ),
               _InfoRow(
                 label: 'Address',
@@ -62,6 +64,17 @@ class StudentDetailScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+String _formatDate(String rawDate) {
+  if (rawDate.isEmpty) return 'N/A';
+
+  try {
+    final parsedDate = DateTime.parse(rawDate);
+    return '${parsedDate.day.toString().padLeft(2, '0')}/${parsedDate.month.toString().padLeft(2, '0')}/${parsedDate.year}';
+  } catch (_) {
+    return rawDate;
   }
 }
 

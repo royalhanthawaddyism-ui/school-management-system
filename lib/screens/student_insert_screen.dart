@@ -122,6 +122,21 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
     });
   }
 
+  Future<void> _pickDateOfBirth() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+
+    if (pickedDate == null) return;
+
+    setState(() {
+      _dobController.text = pickedDate.toIso8601String().split('T').first;
+    });
+  }
+
   Future<void> _saveStudent() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedParent == null) {
@@ -367,9 +382,15 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _dobController,
-                  decoration: const InputDecoration(
+                  readOnly: true,
+                  onTap: _pickDateOfBirth,
+                  decoration: InputDecoration(
                     labelText: 'Date of Birth',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.calendar_today),
+                      onPressed: _pickDateOfBirth,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),

@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hism_management_system/models/parent.dart';
 
 class ParentService {
-  final SupabaseClient _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
 
   Future<String> createParent(Parent parent) async {
     final response = await _client
