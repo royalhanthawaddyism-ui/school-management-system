@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:hism_management_system/models/parent.dart';
 import 'package:hism_management_system/models/student.dart';
+import 'package:hism_management_system/popup/existing_parent_dialog.dart';
+import 'package:hism_management_system/popup/new_parent_dialog.dart';
+import 'package:hism_management_system/services/parent_service.dart';
 import 'package:hism_management_system/services/student_service.dart';
 
 class StudentInsertScreen extends StatefulWidget {
@@ -11,13 +15,19 @@ class StudentInsertScreen extends StatefulWidget {
 }
 
 class _StudentInsertScreenState extends State<StudentInsertScreen> {
+  static const _newParentOption = 'New';
+  static const _existingParentOption = 'Existing';
+
   final _formKey = GlobalKey<FormState>();
   final _studentIdController = TextEditingController();
   final _nameController = TextEditingController();
-  final _parentNameController = TextEditingController();
+  final _parentDisplayController = TextEditingController();
   final _dobController = TextEditingController();
   final _addressController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
+  final ParentService _parentService = ParentService();
+  Parent? _selectedParent;
+  String? _selectedParentOption;
   XFile? _selectedPhoto;
   String? _selectedGender;
   String? _selectedYearId;
@@ -34,7 +44,7 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
   void dispose() {
     _studentIdController.dispose();
     _nameController.dispose();
-    _parentNameController.dispose();
+    _parentDisplayController.dispose();
     _dobController.dispose();
     _addressController.dispose();
     super.dispose();
@@ -91,8 +101,35 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
     }
   }
 
+  Future<void> _chooseParent() async {
+    if (_selectedParentOption == null) return;
+
+    final parent = await showDialog<Parent?>(
+      context: context,
+      builder: (context) {
+        if (_selectedParentOption == _newParentOption) {
+          return const NewParentDialog();
+        }
+        return const ExistingParentDialog();
+      },
+    );
+
+    if (parent == null) return;
+
+    setState(() {
+      _selectedParent = parent;
+      _parentDisplayController.text = parent.displayName;
+    });
+  }
+
   Future<void> _saveStudent() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_selectedParent == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select a parent.')));
+      return;
+    }
 
     setState(() {
       _isSaving = true;
@@ -100,13 +137,26 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
 
     final studentId = _studentIdController.text.trim();
     final name = _nameController.text.trim();
-    final parentName = _parentNameController.text.trim();
     final year = _selectedYearId ?? '';
     final dob = _dobController.text.trim();
     final address = _addressController.text.trim();
     final gender = _selectedGender ?? '';
 
+    String? createdParentId;
+
     try {
+      if (_selectedParentOption == _newParentOption &&
+          _selectedParent != null) {
+        createdParentId = await _parentService.createParent(_selectedParent!);
+        _selectedParent = Parent(
+          id: createdParentId,
+          fatherName: _selectedParent!.fatherName,
+          motherName: _selectedParent!.motherName,
+          phone: _selectedParent!.phone,
+          address: _selectedParent!.address,
+        );
+      }
+
       String photoUrl = '';
       if (_selectedPhoto != null) {
         photoUrl = await StudentService().uploadStudentPhoto(
@@ -118,7 +168,7 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
       final student = Student(
         studentId: studentId,
         name: name,
-        parentName: parentName,
+        parentName: _selectedParent?.id ?? '',
         year: year,
         photoUrl: photoUrl,
         dob: dob,
@@ -131,6 +181,13 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
         Navigator.pop(context, true);
       }
     } catch (error) {
+      if (createdParentId != null && createdParentId.isNotEmpty) {
+        try {
+          await _parentService.deleteParentById(createdParentId);
+        } catch (_) {
+          // Ignore rollback failure, but student creation already failed.
+        }
+      }
       if (mounted) {
         setState(() {
           _isSaving = false;
@@ -181,12 +238,59 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                   },
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _parentNameController,
+                DropdownButtonFormField<String>(
+                  value: _selectedParentOption,
                   decoration: const InputDecoration(
-                    labelText: 'Parent ID',
+                    labelText: 'Parent Type',
                     border: OutlineInputBorder(),
                   ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: _newParentOption,
+                      child: Text('New'),
+                    ),
+                    DropdownMenuItem(
+                      value: _existingParentOption,
+                      child: Text('Existing'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() {
+                      _selectedParentOption = value;
+                      _selectedParent = null;
+                      _parentDisplayController.clear();
+                    });
+                    _chooseParent();
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Parent type is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _parentDisplayController,
+                  readOnly: true,
+                  decoration: InputDecoration(
+                    labelText: 'Selected Parent',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: _selectedParentOption == null
+                          ? null
+                          : _chooseParent,
+                    ),
+                  ),
+                  maxLines: 1,
+                  validator: (_) {
+                    if (_selectedParent == null) {
+                      return 'Please choose a parent.';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(

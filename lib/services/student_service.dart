@@ -20,7 +20,8 @@ class StudentService {
     final response = await _client
         .from('years')
         .select('id, name')
-        .order('name');
+        .eq('deleted', 0)
+        .order('order_no', ascending: true);
     return (response as List).cast<Map<String, dynamic>>();
   }
 
