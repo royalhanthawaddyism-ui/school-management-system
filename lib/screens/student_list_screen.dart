@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hism_management_system/controllers/student_controller.dart';
 import 'package:hism_management_system/models/student.dart';
 import 'package:hism_management_system/screens/student_detail_screen.dart';
 import 'package:hism_management_system/screens/student_insert_screen.dart';
-import 'package:hism_management_system/services/student_service.dart';
 
 class StudentListScreen extends StatefulWidget {
   const StudentListScreen({super.key});
@@ -13,6 +13,7 @@ class StudentListScreen extends StatefulWidget {
 
 class _StudentListScreenState extends State<StudentListScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final StudentController _controller = StudentController();
   late Future<List<Student>> _studentsFuture;
 
   @override
@@ -24,17 +25,12 @@ class _StudentListScreenState extends State<StudentListScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   Future<List<Student>> _fetchStudents() async {
-    try {
-      return await StudentService().fetchStudents();
-    } catch (error, stackTrace) {
-      debugPrint('Failed to load students: $error');
-      debugPrintStack(stackTrace: stackTrace);
-      return [];
-    }
+    return _controller.fetchStudents();
   }
 
   @override
@@ -88,12 +84,10 @@ class _StudentListScreenState extends State<StudentListScreen> {
                   }
 
                   final students = snapshot.data ?? [];
-                  final query = _searchController.text.trim().toLowerCase();
-                  final filteredStudents = query.isEmpty
-                      ? students
-                      : students
-                            .where((student) => student.matchesSearch(query))
-                            .toList();
+                  final filteredStudents = _controller.filterStudents(
+                    students,
+                    _searchController.text,
+                  );
 
                   if (filteredStudents.isEmpty) {
                     return const Center(child: Text('No students found.'));

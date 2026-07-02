@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hism_management_system/controllers/student_controller.dart';
 import 'package:hism_management_system/models/student.dart';
 
 class StudentDetailScreen extends StatelessWidget {
@@ -52,7 +53,7 @@ class StudentDetailScreen extends StatelessWidget {
               _InfoRow(
                 label: 'D.O.B',
                 value: student.dob.isNotEmpty
-                    ? _formatDate(student.dob)
+                    ? StudentController.formatDate(student.dob)
                     : 'N/A',
               ),
               _InfoRow(
@@ -64,17 +65,6 @@ class StudentDetailScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-String _formatDate(String rawDate) {
-  if (rawDate.isEmpty) return 'N/A';
-
-  try {
-    final parsedDate = DateTime.parse(rawDate);
-    return '${parsedDate.day.toString().padLeft(2, '0')}/${parsedDate.month.toString().padLeft(2, '0')}/${parsedDate.year}';
-  } catch (_) {
-    return rawDate;
   }
 }
 

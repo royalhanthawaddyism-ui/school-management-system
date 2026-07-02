@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:hism_management_system/models/parent.dart';
-import 'package:hism_management_system/models/student.dart';
-import 'package:hism_management_system/popup/existing_parent_dialog.dart';
-import 'package:hism_management_system/popup/new_parent_dialog.dart';
-import 'package:hism_management_system/services/parent_service.dart';
-import 'package:hism_management_system/services/student_service.dart';
+import 'package:hism_management_system/controllers/student_controller.dart';
 
 class StudentInsertScreen extends StatefulWidget {
   const StudentInsertScreen({super.key});
@@ -15,202 +9,37 @@ class StudentInsertScreen extends StatefulWidget {
 }
 
 class _StudentInsertScreenState extends State<StudentInsertScreen> {
-  static const _newParentOption = 'New';
-  static const _existingParentOption = 'Existing';
-
-  final _formKey = GlobalKey<FormState>();
-  final _studentIdController = TextEditingController();
-  final _nameController = TextEditingController();
-  final _parentDisplayController = TextEditingController();
-  final _dobController = TextEditingController();
-  final _addressController = TextEditingController();
-  final ImagePicker _imagePicker = ImagePicker();
-  final ParentService _parentService = ParentService();
-  Parent? _selectedParent;
-  String? _selectedParentOption;
-  XFile? _selectedPhoto;
-  String? _selectedGender;
-  String? _selectedYearId;
-  List<Map<String, dynamic>> _years = [];
-  bool _isSaving = false;
+  late final StudentController _controller;
 
   @override
   void initState() {
     super.initState();
-    _loadYears();
+    _controller = StudentController();
+    _controller.addListener(_refresh);
+    _controller.loadYears(context: context);
   }
 
   @override
   void dispose() {
-    _studentIdController.dispose();
-    _nameController.dispose();
-    _parentDisplayController.dispose();
-    _dobController.dispose();
-    _addressController.dispose();
+    _controller.removeListener(_refresh);
+    _controller.dispose();
     super.dispose();
   }
 
-  Future<void> _loadYears() async {
-    try {
-      final years = await StudentService().fetchYears();
-      if (!mounted) return;
-      setState(() {
-        _years = years;
-        if (_years.isNotEmpty) {
-          _selectedYearId = _years.first['id'].toString();
-        }
-      });
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Unable to load years: $error')));
+  void _refresh() {
+    if (mounted) {
+      setState(() {});
     }
-  }
-
-  Future<void> _pickPhoto() async {
-    try {
-      final photo = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 100,
-      );
-      if (photo == null) {
-        return;
-      }
-
-      final photoBytes = await photo.readAsBytes();
-      final validationMessage = StudentService.validatePhotoSize(
-        photoBytes.length,
-      );
-      if (validationMessage != null) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(validationMessage)));
-        return;
-      }
-
-      setState(() {
-        _selectedPhoto = photo;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Unable to choose photo: $error')));
-    }
-  }
-
-  Future<void> _chooseParent() async {
-    if (_selectedParentOption == null) return;
-
-    final parent = await showDialog<Parent?>(
-      context: context,
-      builder: (context) {
-        if (_selectedParentOption == _newParentOption) {
-          return const NewParentDialog();
-        }
-        return const ExistingParentDialog();
-      },
-    );
-
-    if (parent == null) return;
-
-    setState(() {
-      _selectedParent = parent;
-      _parentDisplayController.text = parent.displayName;
-    });
-  }
-
-  Future<void> _pickDateOfBirth() async {
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-    );
-
-    if (pickedDate == null) return;
-
-    setState(() {
-      _dobController.text = pickedDate.toIso8601String().split('T').first;
-    });
   }
 
   Future<void> _saveStudent() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (_selectedParent == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a parent.')));
-      return;
-    }
+    final saved = await _controller.saveStudent(
+      context: context,
+      formKey: _controller.formKey,
+    );
 
-    setState(() {
-      _isSaving = true;
-    });
-
-    final studentId = _studentIdController.text.trim();
-    final name = _nameController.text.trim();
-    final year = _selectedYearId ?? '';
-    final dob = _dobController.text.trim();
-    final address = _addressController.text.trim();
-    final gender = _selectedGender ?? '';
-
-    String? createdParentId;
-
-    try {
-      if (_selectedParentOption == _newParentOption &&
-          _selectedParent != null) {
-        createdParentId = await _parentService.createParent(_selectedParent!);
-        _selectedParent = Parent(
-          id: createdParentId,
-          fatherName: _selectedParent!.fatherName,
-          motherName: _selectedParent!.motherName,
-          phone: _selectedParent!.phone,
-          address: _selectedParent!.address,
-        );
-      }
-
-      String photoUrl = '';
-      if (_selectedPhoto != null) {
-        photoUrl = await StudentService().uploadStudentPhoto(
-          photo: _selectedPhoto!,
-          studentId: studentId,
-        );
-      }
-
-      final student = Student(
-        studentId: studentId,
-        name: name,
-        parentName: _selectedParent?.id ?? '',
-        year: year,
-        photoUrl: photoUrl,
-        dob: dob,
-        address: address,
-        gender: gender,
-      );
-
-      await StudentService().createStudent(student);
-      if (mounted) {
-        Navigator.pop(context, true);
-      }
-    } catch (error) {
-      if (createdParentId != null && createdParentId.isNotEmpty) {
-        try {
-          await _parentService.deleteParentById(createdParentId);
-        } catch (_) {
-          // Ignore rollback failure, but student creation already failed.
-        }
-      }
-      if (mounted) {
-        setState(() {
-          _isSaving = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to save student: $error')),
-        );
-      }
+    if (saved && mounted) {
+      Navigator.pop(context, true);
     }
   }
 
@@ -222,11 +51,11 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Form(
-            key: _formKey,
+            key: _controller.formKey,
             child: ListView(
               children: [
                 TextFormField(
-                  controller: _studentIdController,
+                  controller: _controller.studentIdController,
                   decoration: const InputDecoration(
                     labelText: 'Student ID',
                     border: OutlineInputBorder(),
@@ -240,7 +69,7 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
-                  controller: _nameController,
+                  controller: _controller.nameController,
                   decoration: const InputDecoration(
                     labelText: 'Name',
                     border: OutlineInputBorder(),
@@ -254,29 +83,25 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedParentOption,
+                  initialValue: _controller.selectedParentOption,
                   decoration: const InputDecoration(
                     labelText: 'Parent Information',
                     border: OutlineInputBorder(),
                   ),
                   items: const [
                     DropdownMenuItem(
-                      value: _newParentOption,
+                      value: StudentController.newParentOption,
                       child: Text('New'),
                     ),
                     DropdownMenuItem(
-                      value: _existingParentOption,
+                      value: StudentController.existingParentOption,
                       child: Text('Existing'),
                     ),
                   ],
                   onChanged: (value) {
                     if (value == null) return;
-                    setState(() {
-                      _selectedParentOption = value;
-                      _selectedParent = null;
-                      _parentDisplayController.clear();
-                    });
-                    _chooseParent();
+                    _controller.setParentOption(value);
+                    _controller.chooseParent(context: context);
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -287,21 +112,21 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
-                  controller: _parentDisplayController,
+                  controller: _controller.parentDisplayController,
                   readOnly: true,
                   decoration: InputDecoration(
                     labelText: 'Selected Parent',
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.search),
-                      onPressed: _selectedParentOption == null
+                      onPressed: _controller.selectedParentOption == null
                           ? null
-                          : _chooseParent,
+                          : () => _controller.chooseParent(context: context),
                     ),
                   ),
                   maxLines: 1,
                   validator: (_) {
-                    if (_selectedParent == null) {
+                    if (_controller.selectedParent == null) {
                       return 'Please choose a parent.';
                     }
                     return null;
@@ -309,12 +134,12 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedYearId,
+                  initialValue: _controller.selectedYearId,
                   decoration: const InputDecoration(
                     labelText: 'Year',
                     border: OutlineInputBorder(),
                   ),
-                  items: _years.map((year) {
+                  items: _controller.years.map((year) {
                     final yearId = year['id']?.toString() ?? '';
                     final yearName = year['name']?.toString() ?? 'Unnamed year';
                     return DropdownMenuItem<String>(
@@ -323,9 +148,7 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                     );
                   }).toList(),
                   onChanged: (value) {
-                    setState(() {
-                      _selectedYearId = value;
-                    });
+                    _controller.setYear(value);
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -336,7 +159,7 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedGender,
+                  initialValue: _controller.selectedGender,
                   decoration: const InputDecoration(
                     labelText: 'Gender',
                     border: OutlineInputBorder(),
@@ -346,9 +169,7 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                     DropdownMenuItem(value: 'Female', child: Text('Female')),
                   ],
                   onChanged: (value) {
-                    setState(() {
-                      _selectedGender = value;
-                    });
+                    _controller.setGender(value);
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -359,18 +180,20 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
-                  onPressed: _isSaving ? null : _pickPhoto,
+                  onPressed: _controller.isSaving
+                      ? null
+                      : () => _controller.pickPhoto(context: context),
                   icon: const Icon(Icons.photo_camera),
                   label: Text(
-                    _selectedPhoto == null
+                    _controller.selectedPhoto == null
                         ? 'Select Student Photo'
                         : 'Change Student Photo',
                   ),
                 ),
-                if (_selectedPhoto != null) ...[
+                if (_controller.selectedPhoto != null) ...[
                   const SizedBox(height: 8),
                   Text(
-                    'Selected: ${_selectedPhoto!.name}',
+                    'Selected: ${_controller.selectedPhoto!.name}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 4),
@@ -381,21 +204,22 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                 ],
                 const SizedBox(height: 12),
                 TextFormField(
-                  controller: _dobController,
+                  controller: _controller.dobController,
                   readOnly: true,
-                  onTap: _pickDateOfBirth,
+                  onTap: () => _controller.pickDateOfBirth(context: context),
                   decoration: InputDecoration(
                     labelText: 'Date of Birth',
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.calendar_today),
-                      onPressed: _pickDateOfBirth,
+                      onPressed: () =>
+                          _controller.pickDateOfBirth(context: context),
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
-                  controller: _addressController,
+                  controller: _controller.addressController,
                   decoration: const InputDecoration(
                     labelText: 'Address',
                     border: OutlineInputBorder(),
@@ -404,8 +228,8 @@ class _StudentInsertScreenState extends State<StudentInsertScreen> {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: _isSaving ? null : _saveStudent,
-                  child: _isSaving
+                  onPressed: _controller.isSaving ? null : _saveStudent,
+                  child: _controller.isSaving
                       ? const SizedBox(
                           height: 20,
                           width: 20,
