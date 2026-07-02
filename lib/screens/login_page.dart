@@ -27,16 +27,17 @@ class _LoginPageState extends State<LoginPage> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     try {
-      await _controller.signIn(
+      final profile = await _controller.signIn(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Login Success")));
+      final role = profile?['role']?.toString() ?? 'user';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login Success. Your role is $role')),
+      );
 
       Navigator.pushReplacement(
         context,
