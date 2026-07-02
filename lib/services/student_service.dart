@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hism_management_system/models/student.dart';
@@ -6,6 +7,10 @@ class StudentService {
   static const int maxPhotoSizeBytes = 1024 * 1024;
 
   SupabaseClient get _client => Supabase.instance.client;
+
+  static bool shouldDeleteParent(int otherActiveStudentCount) {
+    return otherActiveStudentCount <= 0;
+  }
 
   Future<List<Student>> fetchStudents() async {
     final response = await _client
@@ -73,5 +78,59 @@ class StudentService {
       'gender': student.gender.isEmpty ? null : student.gender,
       'deleted': 0,
     });
+  }
+
+  Future<void> deleteStudent(String studentId) async {
+    final studentRow = await _client
+        .from('students')
+        .select('parent_id')
+        .eq('student_id', studentId)
+        .maybeSingle();
+
+    final parentId = studentRow?['parent_id']?.toString();
+
+    await _client
+        .from('students')
+        .update({'deleted': 1})
+        .eq('student_id', studentId);
+
+    if (parentId == null || parentId.isEmpty) {
+      return;
+    }
+
+    final otherActiveStudents = await _client
+        .from('students')
+        .select('id')
+        .eq('parent_id', parentId)
+        .eq('deleted', 0)
+        .neq('student_id', studentId)
+        .limit(1);
+
+    final otherActiveStudentCount = (otherActiveStudents as List).length;
+    if (!shouldDeleteParent(otherActiveStudentCount)) {
+      return;
+    }
+
+    await _client.from('parents').update({'deleted': 1}).eq('id', parentId);
+
+    try {
+      final parentRow = await _client
+          .from('parents')
+          .select('profile_id')
+          .eq('id', parentId)
+          .maybeSingle();
+
+      final profileId = parentRow?['profile_id']?.toString();
+      if (profileId != null && profileId.isNotEmpty) {
+        await _client
+            .from('profiles')
+            .update({'deleted': 1})
+            .eq('id', profileId);
+      }
+    } catch (error) {
+      debugPrint(
+        'Failed to update related profiles for parent $parentId: $error',
+      );
+    }
   }
 }

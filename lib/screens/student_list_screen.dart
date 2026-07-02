@@ -106,13 +106,19 @@ class _StudentListScreenState extends State<StudentListScreen> {
                         ),
                         child: ListTile(
                           onTap: () {
-                            Navigator.push(
+                            Navigator.push<bool>(
                               context,
                               MaterialPageRoute(
                                 builder: (_) =>
                                     StudentDetailScreen(student: student),
                               ),
-                            );
+                            ).then((shouldRefresh) {
+                              if (shouldRefresh == true) {
+                                setState(() {
+                                  _studentsFuture = _fetchStudents();
+                                });
+                              }
+                            });
                           },
                           contentPadding: const EdgeInsets.all(12),
                           leading: CircleAvatar(

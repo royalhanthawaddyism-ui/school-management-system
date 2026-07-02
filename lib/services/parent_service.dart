@@ -21,7 +21,7 @@ class ParentService {
   }
 
   Future<void> deleteParentById(String id) async {
-    await _client.from('parents').delete().eq('id', id);
+    await _client.from('parents').update({'deleted': 1}).eq('id', id);
   }
 
   Future<List<Parent>> searchParents(String query) async {

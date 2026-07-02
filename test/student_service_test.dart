@@ -15,4 +15,14 @@ void main() {
       );
     });
   });
+
+  group('StudentService parent cleanup decision', () {
+    test('marks parent cleanup when no other active students use it', () {
+      expect(StudentService.shouldDeleteParent(0), isTrue);
+    });
+
+    test('keeps parent active when other active students still use it', () {
+      expect(StudentService.shouldDeleteParent(1), isFalse);
+    });
+  });
 }
