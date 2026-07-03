@@ -12,11 +12,16 @@ class StudentService {
     return otherActiveStudentCount <= 0;
   }
 
-  Future<List<Student>> fetchStudents() async {
-    final response = await _client
-        .from('students')
-        .select('*, years(*)')
-        .eq('deleted', 0);
+  Future<List<Student>> fetchStudents({String? parentId}) async {
+    var query = _client.from('students').select('*, years(*)').eq('deleted', 0);
+    if (parentId != null) {
+      if (parentId.isEmpty) {
+        return [];
+      }
+      query = query.eq('parent_id', parentId);
+    }
+
+    final response = await query;
     final rows = (response as List).cast<Map<String, dynamic>>();
     return rows.map(Student.fromMap).toList();
   }

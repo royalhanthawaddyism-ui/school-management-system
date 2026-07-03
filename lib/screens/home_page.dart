@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:hism_management_system/screens/records_page.dart';
+import 'package:hism_management_system/screens/user_account_screen.dart';
 import 'package:hism_management_system/screens/settings_page.dart';
 import 'package:hism_management_system/screens/setting_screen.dart';
 import 'package:hism_management_system/screens/student_list_screen.dart';
@@ -8,7 +8,10 @@ import 'package:hism_management_system/screens/teacher_list_screen.dart';
 import 'package:hism_management_system/screens/timetable_list_screen.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final String role;
+  final String? parentId;
+
+  const HomePage({super.key, required this.role, this.parentId});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -17,22 +20,36 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  static const _pageTitles = [
+  bool get isAdmin => widget.role == '1';
+
+  List<String> get _pageTitles =>
+      isAdmin ? _pageTitlesForAdmin : _pageTitlesForNormal;
+
+  List<BottomNavigationBarItem> get _navigationItems =>
+      isAdmin ? _navigationItemsForAdmin : _navigationItemsForNormal;
+
+  List<Widget> get _pages => [
+    _HomeTab(role: widget.role, parentId: widget.parentId),
+    if (isAdmin) const UserAccountScreen(),
+    if (isAdmin) const SettingsPage(),
+  ];
+
+  static const _pageTitlesForNormal = ['Royal Hanthawaddy ISM'];
+
+  static const _navigationItemsForNormal = [
+    BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+  ];
+
+  static const _pageTitlesForAdmin = [
     'Royal Hanthawaddy ISM',
-    'Student Records',
+    'User Accounts',
     'Settings',
   ];
 
-  static const _navigationItems = [
+  static const _navigationItemsForAdmin = [
     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-    BottomNavigationBarItem(icon: Icon(Icons.folder_shared), label: 'Records'),
+    BottomNavigationBarItem(icon: Icon(Icons.person), label: 'User Accounts'),
     BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-  ];
-
-  static final List<Widget> _pages = [
-    const _HomeTab(),
-    const RecordsPage(),
-    const SettingsPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -46,17 +63,22 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(title: Text(_pageTitles[_selectedIndex])),
       body: IndexedStack(index: _selectedIndex, children: _pages),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: _navigationItems,
-      ),
+      bottomNavigationBar: isAdmin
+          ? BottomNavigationBar(
+              currentIndex: _selectedIndex,
+              onTap: _onItemTapped,
+              items: _navigationItems,
+            )
+          : null,
     );
   }
 }
 
 class _HomeTab extends StatelessWidget {
-  const _HomeTab();
+  final String role;
+  final String? parentId;
+
+  const _HomeTab({required this.role, this.parentId});
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +86,7 @@ class _HomeTab extends StatelessWidget {
       _MenuItem(
         icon: Icons.school,
         label: 'Students',
-        destination: const StudentListScreen(),
+        destination: StudentListScreen(role: role, parentId: parentId),
       ),
       _MenuItem(
         icon: Icons.person,

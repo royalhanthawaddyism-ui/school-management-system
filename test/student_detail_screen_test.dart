@@ -16,7 +16,9 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(home: StudentDetailScreen(student: student)),
+      MaterialApp(
+        home: StudentDetailScreen(student: student, role: ''),
+      ),
     );
 
     expect(find.text('Name'), findsOneWidget);

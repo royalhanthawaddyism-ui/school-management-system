@@ -122,9 +122,9 @@ class StudentController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<List<Student>> fetchStudents() async {
+  Future<List<Student>> fetchStudents({String? parentId}) async {
     try {
-      return await StudentService().fetchStudents();
+      return await StudentService().fetchStudents(parentId: parentId);
     } catch (error, stackTrace) {
       debugPrint('Failed to load students: $error');
       debugPrintStack(stackTrace: stackTrace);
@@ -237,8 +237,9 @@ class StudentController extends ChangeNotifier {
         }
       }
       if (context.mounted) {
+        final errorMessage = error.toString();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Unable to save student: $error')),
+          SnackBar(content: Text('Unable to save student: $errorMessage')),
         );
       }
       return false;

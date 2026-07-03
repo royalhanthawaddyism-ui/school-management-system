@@ -5,7 +5,10 @@ import 'package:hism_management_system/screens/student_detail_screen.dart';
 import 'package:hism_management_system/screens/student_insert_screen.dart';
 
 class StudentListScreen extends StatefulWidget {
-  const StudentListScreen({super.key});
+  final String role;
+  final String? parentId;
+
+  const StudentListScreen({super.key, required this.role, this.parentId});
 
   @override
   State<StudentListScreen> createState() => _StudentListScreenState();
@@ -13,13 +16,19 @@ class StudentListScreen extends StatefulWidget {
 
 class _StudentListScreenState extends State<StudentListScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final StudentController _controller = StudentController();
+  late final StudentController _controller = StudentController();
   late Future<List<Student>> _studentsFuture;
 
   @override
   void initState() {
     super.initState();
     _studentsFuture = _fetchStudents();
+  }
+
+  Future<List<Student>> _fetchStudents() async {
+    return _controller.fetchStudents(
+      parentId: widget.role == '3' ? widget.parentId : null,
+    );
   }
 
   @override
@@ -29,29 +38,29 @@ class _StudentListScreenState extends State<StudentListScreen> {
     super.dispose();
   }
 
-  Future<List<Student>> _fetchStudents() async {
-    return _controller.fetchStudents();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Students')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push<bool>(
-            context,
-            MaterialPageRoute(builder: (_) => const StudentInsertScreen()),
-          ).then((shouldRefresh) {
-            if (shouldRefresh == true) {
-              setState(() {
-                _studentsFuture = _fetchStudents();
-              });
-            }
-          });
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: widget.role == '1'
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const StudentInsertScreen(),
+                  ),
+                ).then((shouldRefresh) {
+                  if (shouldRefresh == true) {
+                    setState(() {
+                      _studentsFuture = _fetchStudents();
+                    });
+                  }
+                });
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: SafeArea(
         child: Column(
           children: [
@@ -109,8 +118,10 @@ class _StudentListScreenState extends State<StudentListScreen> {
                             Navigator.push<bool>(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    StudentDetailScreen(student: student),
+                                builder: (_) => StudentDetailScreen(
+                                  student: student,
+                                  role: widget.role,
+                                ),
                               ),
                             ).then((shouldRefresh) {
                               if (shouldRefresh == true) {

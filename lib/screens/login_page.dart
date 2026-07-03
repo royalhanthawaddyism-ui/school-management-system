@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hism_management_system/controllers/login_controller.dart';
 import 'package:hism_management_system/screens/home_page.dart';
+import 'package:hism_management_system/services/parent_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -35,13 +36,22 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
 
       final role = profile?['role']?.toString() ?? 'user';
+      final profileId = profile?['id']?.toString() ?? '';
+      String? parentId;
+      if (role == '3' && profileId.isNotEmpty) {
+        parentId = await ParentService().getParentIdByProfileId(profileId);
+      }
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Login Success. Your role is $role')),
       );
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(
+          builder: (_) => HomePage(role: role, parentId: parentId),
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(

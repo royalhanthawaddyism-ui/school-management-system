@@ -4,9 +4,14 @@ import 'package:hism_management_system/models/student.dart';
 import 'package:hism_management_system/services/student_service.dart';
 
 class StudentDetailScreen extends StatefulWidget {
-  const StudentDetailScreen({super.key, required this.student});
+  const StudentDetailScreen({
+    super.key,
+    required this.student,
+    required this.role,
+  });
 
   final Student student;
+  final String role;
 
   @override
   State<StudentDetailScreen> createState() => _StudentDetailScreenState();
@@ -46,32 +51,36 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final canEdit = widget.role == '1';
+
     return Scaffold(
       appBar: AppBar(
         title: Text(student.name.isNotEmpty ? student.name : 'Student Details'),
         actions: [
-          IconButton(
-            tooltip: 'Update student',
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Update flow is not implemented yet.'),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            tooltip: 'Delete student',
-            icon: _isDeleting
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.delete),
-            onPressed: _isDeleting ? null : _deleteStudent,
-          ),
+          if (canEdit)
+            IconButton(
+              tooltip: 'Update student',
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Update flow is not implemented yet.'),
+                  ),
+                );
+              },
+            ),
+          if (canEdit)
+            IconButton(
+              tooltip: 'Delete student',
+              icon: _isDeleting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.delete),
+              onPressed: _isDeleting ? null : _deleteStudent,
+            ),
         ],
       ),
       body: SafeArea(
