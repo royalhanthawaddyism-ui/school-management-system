@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:hism_management_system/screens/user_account_screen.dart';
+import 'package:hism_management_system/screens/profile_account_screen.dart';
 import 'package:hism_management_system/screens/settings_page.dart';
 import 'package:hism_management_system/screens/setting_screen.dart';
 import 'package:hism_management_system/screens/student_list_screen.dart';
