@@ -30,7 +30,7 @@ class _HomePageState extends State<HomePage> {
 
   List<Widget> get _pages => [
     _HomeTab(role: widget.role, parentId: widget.parentId),
-    if (isAdmin) const UserAccountScreen(),
+    if (isAdmin) ProfileListScreen(),
     if (isAdmin) const SettingsPage(),
   ];
 
