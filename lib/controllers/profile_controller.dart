@@ -13,5 +13,27 @@ class ProfileController extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteProfile(String id) async {}
+  Future<void> updateProfile({
+    required String id,
+    required String email,
+    required String password,
+    required String role,
+  }) {
+    return ProfileService().updateProfile(
+      id: id,
+      email: email,
+      password: password,
+      role: role,
+    );
+  }
+
+  Future<void> deleteProfile(String id) async {
+    try {
+      await ProfileService().deleteProfile(id);
+    } catch (error, stackTrace) {
+      debugPrint('Failed to delete profile: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      rethrow;
+    }
+  }
 }

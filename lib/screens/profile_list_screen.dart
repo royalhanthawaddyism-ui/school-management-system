@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../controllers/profile_controller.dart';
 import '../models/profile.dart';
+import '../screens/profile_edit_screen.dart';
 
 class ProfileListScreen extends StatefulWidget {
   const ProfileListScreen({super.key});
@@ -120,6 +121,16 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: ListTile(
+                            onTap: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      ProfileEditScreen(profile: profile),
+                                ),
+                              );
+                              loadProfiles();
+                            },
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12,
                               vertical: 8,

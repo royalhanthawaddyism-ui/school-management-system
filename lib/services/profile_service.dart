@@ -12,5 +12,21 @@ class ProfileService {
     return rows.map(Profile.fromMap).toList();
   }
 
+  Future<void> updateProfile({
+    required String id,
+    required String email,
+    required String password,
+    required String role,
+  }) async {
+    final response = await _client.functions.invoke(
+      'update_school_user',
+      body: {'user_id': id, 'email': email, 'password': password, 'role': role},
+    );
+
+    if (response.status != 200) {
+      throw Exception(response.data['error'] ?? 'Update failed');
+    }
+  }
+
   Future<void> deleteProfile(String studentId) async {}
 }
