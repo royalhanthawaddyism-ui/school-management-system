@@ -54,6 +54,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
     final canEdit = widget.role == '1';
 
     return Scaffold(
+      backgroundColor: Colors.grey[200], // Background color behind the card
       appBar: AppBar(
         title: Text(student.name.isNotEmpty ? student.name : 'Student Details'),
         actions: [
@@ -84,82 +85,135 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                backgroundImage: student.photoUrl.isNotEmpty
-                    ? NetworkImage(student.photoUrl)
-                    : null,
-                child: student.photoUrl.isEmpty
-                    ? const Icon(Icons.person, size: 36)
-                    : null,
-              ),
-              const SizedBox(height: 24),
-              Text(
-                student.name.isNotEmpty ? student.name : 'Unnamed student',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Container(
+              constraints: const BoxConstraints(
+                maxWidth: 450,
+              ), // Responsive limit
+              child: AspectRatio(
+                aspectRatio: 9 / 16, // Matches the template aspect ratio
+                child: Card(
+                  elevation: 4,
+                  clipBehavior: Clip.antiAlias,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final width = constraints.maxWidth;
+                      final height = constraints.maxHeight;
+
+                      // Dynamic styling based on card scale
+                      final textStyle = TextStyle(
+                        fontSize: width * 0.04,
+                        color: const Color(
+                          0xFF0D2569,
+                        ), // Matches the template theme
+                        fontWeight: FontWeight.w600,
+                      );
+
+                      return Stack(
+                        children: [
+                          // 1. Template Background Image
+                          Positioned.fill(
+                            child: Image.asset(
+                              'assets/images/student.png', // Ensure this matches your asset path
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+
+                          // 2. Profile Picture Frame Placement
+                          Positioned(
+                            top: height * 0.234,
+                            left: width * 0.20,
+                            right: width * 0.20,
+                            child: CircleAvatar(
+                              radius: width * 0.29,
+                              backgroundColor: Colors.transparent,
+                              backgroundImage: student.photoUrl.isNotEmpty
+                                  ? NetworkImage(student.photoUrl)
+                                  : null,
+                              child: student.photoUrl.isEmpty
+                                  ? Icon(
+                                      Icons.person,
+                                      size: width * 0.25,
+                                      color: Colors.grey,
+                                    )
+                                  : null,
+                            ),
+                          ),
+
+                          // 3. Information Fields Overlay
+                          // Positioned neatly directly on top of the blank template lines
+                          Positioned(
+                            left: width * 0.42,
+                            right: width * 0.12,
+                            top: height * 0.587,
+                            bottom: height * 0.14,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _buildTextLine(
+                                  student.name.isNotEmpty
+                                      ? student.name
+                                      : 'N/A',
+                                  textStyle,
+                                ),
+                                _buildTextLine(
+                                  student.studentId.isNotEmpty
+                                      ? student.studentId
+                                      : 'N/A',
+                                  textStyle,
+                                ),
+                                _buildTextLine(
+                                  student.year.isNotEmpty
+                                      ? student.year
+                                      : 'N/A',
+                                  textStyle,
+                                ),
+                                _buildTextLine(
+                                  student.dob.isNotEmpty
+                                      ? StudentController.formatDate(
+                                          student.dob,
+                                        )
+                                      : 'N/A',
+                                  textStyle,
+                                ),
+                                _buildTextLine(
+                                  student.address.isNotEmpty
+                                      ? student.address
+                                      : 'N/A',
+                                  textStyle,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              _InfoRow(
-                label: 'Name',
-                value: student.name.isNotEmpty ? student.name : 'N/A',
-              ),
-              _InfoRow(
-                label: 'Student ID',
-                value: student.studentId.isNotEmpty ? student.studentId : 'N/A',
-              ),
-              _InfoRow(
-                label: 'Year',
-                value: student.year.isNotEmpty ? student.year : 'N/A',
-              ),
-              _InfoRow(
-                label: 'D.O.B',
-                value: student.dob.isNotEmpty
-                    ? StudentController.formatDate(student.dob)
-                    : 'N/A',
-              ),
-              _InfoRow(
-                label: 'Address',
-                value: student.address.isNotEmpty ? student.address : 'N/A',
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
-}
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-          Expanded(child: Text(value)),
-        ],
+  Widget _buildTextLine(String value, TextStyle style) {
+    return Expanded(
+      child: Container(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          value,
+          style: style,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
     );
   }
