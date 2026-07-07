@@ -228,8 +228,8 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                             Positioned(
                               left: width * 0.22,
                               right: width * 0.10,
-                              top: height * 0.590,
-                              bottom: height * 0.14,
+                              top: height * 0.585,
+                              bottom: height * 0.135,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment:
@@ -318,7 +318,7 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
               child: Text(
                 value,
                 style: style,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
