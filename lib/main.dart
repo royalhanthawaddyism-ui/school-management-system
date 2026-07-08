@@ -23,8 +23,11 @@ class MyApp extends StatelessWidget {
       title: 'Royal Hanthawaddy ISM',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.white,
+          seedColor: const Color.fromARGB(255, 8, 44, 98),
           primary: const Color.fromARGB(255, 8, 44, 98),
+          primaryContainer: const Color.fromARGB(255, 8, 44, 98),
+          onPrimary: Colors.white,
+          onPrimaryContainer: Colors.white,
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Color.fromARGB(255, 5, 29, 66),
