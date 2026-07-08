@@ -137,7 +137,7 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
                             ),
 
                             leading: const CircleAvatar(
-                              backgroundColor: Colors.blueAccent,
+                              backgroundColor: Color.fromARGB(255, 8, 44, 98),
                               child: Icon(Icons.person, color: Colors.white),
                             ),
 
