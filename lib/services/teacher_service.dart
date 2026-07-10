@@ -17,4 +17,15 @@ class TeacherService {
       throw Exception('can not get data- $e');
     }
   }
+
+  Future<void> deleteTeacher(String employeeId) async {
+    try {
+      await _supabase
+          .from('teachers')
+          .update({'deleted': 1})
+          .eq('employee_id', employeeId);
+    } catch (e) {
+      throw Exception('can not delete teacher- $e');
+    }
+  }
 }

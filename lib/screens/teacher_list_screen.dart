@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hism_management_system/controllers/teacher_controller.dart';
 import 'package:hism_management_system/models/teacher.dart';
+import 'package:hism_management_system/screens/teacher_detail_screen.dart';
 
 class TeacherListScreen extends StatefulWidget {
-  const TeacherListScreen({super.key});
+  final String role;
+  const TeacherListScreen({super.key, required this.role});
 
   @override
   State<TeacherListScreen> createState() => _TeacherListScreenState();
@@ -155,7 +157,19 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
                               ],
                             ),
                             onTap: () {
-                              // go to details screen
+                              Navigator.push<bool>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => TeacherDetailScreen(
+                                    teacher: teacher,
+                                    role: widget.role,
+                                  ),
+                                ),
+                              ).then((shouldRefresh) {
+                                if (shouldRefresh == true) {
+                                  _controller.loadTeachers();
+                                }
+                              });
                             },
                           ),
                         );

@@ -91,7 +91,7 @@ class _HomeTab extends StatelessWidget {
       _MenuItem(
         icon: Icons.person,
         label: 'Teachers',
-        destination: const TeacherListScreen(),
+        destination: TeacherListScreen(role: role),
       ),
       _MenuItem(
         icon: Icons.calendar_month,
