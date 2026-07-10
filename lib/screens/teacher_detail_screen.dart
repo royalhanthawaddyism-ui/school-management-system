@@ -163,22 +163,10 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                         final width = constraints.maxWidth;
                         final height = constraints.maxHeight;
 
-                        final nameStyle = TextStyle(
-                          fontSize: width * 0.055,
-                          color: const Color(0xFF0D2569),
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.5,
-                        );
-
-                        final valueStyle = TextStyle(
-                          fontSize: width * 0.038,
-                          color: const Color(0xFF0D2569),
-                          fontWeight: FontWeight.w700,
-                        );
+                        const primaryColor = Color(0xFF0D2569);
 
                         return Stack(
                           children: [
-                            // ၁။ Background ID Card Template ပုံ
                             Positioned.fill(
                               child: Image.asset(
                                 'assets/images/teacher.png',
@@ -187,9 +175,68 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                             ),
 
                             Positioned(
+                              top: height * 0.045,
+                              left: width * 0.22,
+                              right: width * 0.05,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "ROYAL",
+                                    style: TextStyle(
+                                      fontSize: width * 0.035,
+                                      color: primaryColor,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                  Text(
+                                    "HANTHAWADDY",
+                                    style: TextStyle(
+                                      fontSize: width * 0.062,
+                                      color: primaryColor,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  Text(
+                                    "INTERNATIONAL SCHOOL MYANMAR",
+                                    style: TextStyle(
+                                      fontSize: width * 0.018,
+                                      color: primaryColor,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            Positioned(
+                              left: width * 0.02,
                               top: height * 0.22,
-                              left: width * 0.24,
-                              right: width * 0.12,
+                              bottom: height * 0.32,
+                              child: Container(
+                                alignment: Alignment.center,
+                                child: RotatedBox(
+                                  quarterTurns: 3,
+                                  child: Text(
+                                    "TEACHER",
+                                    style: TextStyle(
+                                      fontSize: width * 0.15,
+                                      color: primaryColor,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 6.0,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            Positioned(
+                              top: height * 0.20,
+                              left: width * 0.32,
+                              right: width * 0.08,
                               child: AspectRatio(
                                 aspectRatio: 1,
                                 child: CircleAvatar(
@@ -204,7 +251,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                                           teacher.photoUrl!.isEmpty
                                       ? Icon(
                                           Icons.person,
-                                          size: width * 0.25,
+                                          size: width * 0.22,
                                           color: Colors.grey[600],
                                         )
                                       : null,
@@ -214,41 +261,88 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
 
                             Positioned(
                               left: width * 0.24,
-                              right: width * 0.10,
-                              top: height * 0.65,
-                              child: Text(
-                                teacher.name.toUpperCase(),
-                                style: nameStyle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              right: width * 0.0,
+                              top: height * 0.687,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Expanded(
+                                    child: Divider(
+                                      color: Color(0xFFE48224),
+                                      thickness: 1.5,
+                                      endIndent: 10,
+                                    ),
+                                  ),
+                                  Text(
+                                    "TEACHER",
+                                    style: TextStyle(
+                                      fontSize: width * 0.038,
+                                      color: const Color(0xFFE48224),
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
+                                  const Expanded(
+                                    child: Divider(
+                                      color: Color(0xFFE48224),
+                                      thickness: 1.5,
+                                      indent: 10,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
 
                             Positioned(
-                              left: width * 0.54,
-                              right: width * 0.06,
-                              top: height * 0.793,
-                              bottom: height * 0.065,
+                              left: width * 0.26,
+                              right: width * 0.05,
+                              top: height * 0.61,
+                              child: Container(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  teacher.name.toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: width * 0.052,
+                                    color: primaryColor,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.5,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+
+                            Positioned(
+                              left: width * 0.32,
+                              right: width * 0.04,
+                              top: height * 0.76,
+                              bottom: height * 0.05,
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  _buildTeacherValue(
+                                  _buildDataRow(
+                                    "EMPLOYEE ID",
                                     teacher.employeeId.isNotEmpty
                                         ? teacher.employeeId
                                         : 'N/A',
-                                    valueStyle,
+                                    width,
+                                    primaryColor,
                                   ),
-                                  _buildTeacherValue(
+                                  _buildDataRow(
+                                    "SUBJECT",
                                     teacher.subject.isNotEmpty
                                         ? teacher.subject
                                         : 'N/A',
-                                    valueStyle,
+                                    width,
+                                    primaryColor,
                                   ),
-                                  _buildTeacherValue(
+                                  _buildDataRow(
+                                    "JOINING DATE",
                                     teacher.formattedJoiningDate,
-                                    valueStyle,
+                                    width,
+                                    primaryColor,
                                   ),
                                 ],
                               ),
@@ -267,16 +361,50 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
     );
   }
 
-  Widget _buildTeacherValue(String value, TextStyle style) {
+  Widget _buildDataRow(
+    String label,
+    String value,
+    double cardWidth,
+    Color textColor,
+  ) {
     return Expanded(
-      child: Container(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          value,
-          style: style,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: cardWidth * 0.28,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: cardWidth * 0.032,
+                color: textColor,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+
+          Text(
+            ":",
+            style: TextStyle(
+              fontSize: cardWidth * 0.032,
+              color: textColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(width: cardWidth * 0.04),
+
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: cardWidth * 0.032,
+                color: textColor,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
