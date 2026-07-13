@@ -175,9 +175,9 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                             ),
 
                             Positioned(
-                              top: height * 0.045,
-                              left: width * 0.22,
-                              right: width * 0.05,
+                              top: height * 0.08,
+                              left: width * 0.00,
+                              right: width * 0.07,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
@@ -187,25 +187,33 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                                       fontSize: width * 0.035,
                                       color: primaryColor,
                                       fontWeight: FontWeight.w700,
-                                      letterSpacing: 1.5,
+                                      letterSpacing: 1,
                                     ),
                                   ),
-                                  Text(
-                                    "HANTHAWADDY",
-                                    style: TextStyle(
-                                      fontSize: width * 0.062,
-                                      color: primaryColor,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 0.5,
+
+                                  Transform.translate(
+                                    offset: Offset(0, -height * 0.01),
+                                    child: Text(
+                                      "HANTHAWADDY",
+                                      style: TextStyle(
+                                        fontSize: width * 0.062,
+                                        color: primaryColor,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 0.3,
+                                      ),
                                     ),
                                   ),
-                                  Text(
-                                    "INTERNATIONAL SCHOOL MYANMAR",
-                                    style: TextStyle(
-                                      fontSize: width * 0.018,
-                                      color: primaryColor,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0.5,
+
+                                  Transform.translate(
+                                    offset: Offset(0, -height * 0.02),
+                                    child: Text(
+                                      "INTERNATIONAL SCHOOL MYANMAR",
+                                      style: TextStyle(
+                                        fontSize: width * 0.018,
+                                        color: primaryColor,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.5,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -213,9 +221,9 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                             ),
 
                             Positioned(
-                              left: width * 0.02,
-                              top: height * 0.22,
-                              bottom: height * 0.32,
+                              left: -width * 0.03,
+                              top: height * 0.17,
+                              bottom: height * 0.25,
                               child: Container(
                                 alignment: Alignment.center,
                                 child: RotatedBox(
@@ -223,7 +231,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                                   child: Text(
                                     "TEACHER",
                                     style: TextStyle(
-                                      fontSize: width * 0.15,
+                                      fontSize: width * 0.16,
                                       color: primaryColor,
                                       fontWeight: FontWeight.w900,
                                       letterSpacing: 6.0,
@@ -261,8 +269,8 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
 
                             Positioned(
                               left: width * 0.24,
-                              right: width * 0.0,
-                              top: height * 0.687,
+                              right: width * 0.03,
+                              top: height * 0.74,
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -276,7 +284,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                                   Text(
                                     "TEACHER",
                                     style: TextStyle(
-                                      fontSize: width * 0.038,
+                                      fontSize: width * 0.045,
                                       color: const Color(0xFFE48224),
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: 1.0,
@@ -296,28 +304,30 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                             Positioned(
                               left: width * 0.26,
                               right: width * 0.05,
-                              top: height * 0.61,
+                              top: height * 0.69,
                               child: Container(
                                 alignment: Alignment.center,
-                                child: Text(
-                                  teacher.name.toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: width * 0.052,
-                                    color: primaryColor,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0.5,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    teacher.name.toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: width * 0.06,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.5,
+                                    ),
+                                    maxLines: 1,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ),
 
                             Positioned(
-                              left: width * 0.32,
+                              left: width * 0.3,
                               right: width * 0.04,
-                              top: height * 0.76,
-                              bottom: height * 0.05,
+                              top: height * 0.792,
+                              bottom: height * 0.065,
                               child: Column(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -375,7 +385,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
             child: Text(
               label,
               style: TextStyle(
-                fontSize: cardWidth * 0.032,
+                fontSize: cardWidth * 0.04,
                 color: textColor,
                 fontWeight: FontWeight.w800,
               ),
@@ -385,7 +395,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
           Text(
             ":",
             style: TextStyle(
-              fontSize: cardWidth * 0.032,
+              fontSize: cardWidth * 0.04,
               color: textColor,
               fontWeight: FontWeight.bold,
             ),
@@ -396,7 +406,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
             child: Text(
               value,
               style: TextStyle(
-                fontSize: cardWidth * 0.032,
+                fontSize: cardWidth * 0.04,
                 color: textColor,
                 fontWeight: FontWeight.w600,
               ),
