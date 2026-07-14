@@ -101,7 +101,6 @@ class _TeacherInsertScreenState extends State<TeacherInsertScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // --- Date of Birth (D.O.B) --- [ထပ်တိုးထားသောအပိုင်း]
                 TextFormField(
                   controller: _controller.dobController,
                   readOnly: true,
@@ -123,7 +122,6 @@ class _TeacherInsertScreenState extends State<TeacherInsertScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // --- Photo URL --- [မူလအတိုင်း ပြန်ထားပါသည်]
                 TextFormField(
                   controller: _controller.photoUrlController,
                   decoration: const InputDecoration(

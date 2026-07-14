@@ -127,10 +127,12 @@ class TeacherController extends ChangeNotifier {
 
     try {
       await _teacherService.createTeacher(newTeacher);
+      // ignore: use_build_context_synchronously
       _showSnackBar(context, 'Teacher recorded successfully!', Colors.green);
       return true;
     } catch (e) {
       _showSnackBar(
+        // ignore: use_build_context_synchronously
         context,
         e.toString().replaceAll('Exception: ', ''),
         Colors.red,

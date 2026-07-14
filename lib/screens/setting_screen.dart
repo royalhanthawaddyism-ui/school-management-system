@@ -58,6 +58,7 @@ class _SettingScreenState extends State<SettingScreen> {
       }
     } catch (error) {
       ScaffoldMessenger.of(
+        // ignore: use_build_context_synchronously
         context,
       ).showSnackBar(SnackBar(content: Text('Error logging out: $error')));
     }

@@ -65,6 +65,7 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
       });
     } catch (e) {
       ScaffoldMessenger.of(
+        // ignore: use_build_context_synchronously
         context,
       ).showSnackBar(SnackBar(content: Text("Delete failed: $e")));
     }
