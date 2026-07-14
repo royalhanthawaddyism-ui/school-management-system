@@ -313,7 +313,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                             Positioned(
                               left: width * 0.26,
                               right: width * 0.05,
-                              top: height * 0.69,
+                              top: height * 0.7,
                               child: Container(
                                 alignment: Alignment.center,
                                 child: FittedBox(
