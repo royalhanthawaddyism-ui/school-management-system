@@ -18,6 +18,14 @@ class TeacherService {
     }
   }
 
+  Future<void> createTeacher(Teacher teacher) async {
+    try {
+      await _supabase.from('teachers').insert(teacher.toJson());
+    } catch (error) {
+      throw Exception('Database operation failed: $error');
+    }
+  }
+
   Future<void> deleteTeacher(String employeeId) async {
     try {
       await _supabase

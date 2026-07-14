@@ -4,6 +4,7 @@ class Teacher {
   final String name;
   final String? photoUrl;
   final String subject;
+  final DateTime dob;
   final DateTime joiningDate;
 
   Teacher({
@@ -12,6 +13,7 @@ class Teacher {
     required this.name,
     this.photoUrl,
     required this.subject,
+    required this.dob,
     required this.joiningDate,
   });
 
@@ -22,8 +24,28 @@ class Teacher {
       name: json['name'] as String,
       photoUrl: json['photo_url'] as String?,
       subject: json['subject'] as String,
-      joiningDate: DateTime.parse(json['joining_date'] as String),
+      dob: json['dob'] != null
+          ? DateTime.parse(json['dob'] as String)
+          : DateTime.now(),
+      joiningDate: json['joining_date'] != null
+          ? DateTime.parse(json['joining_date'] as String)
+          : DateTime.now(),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'employee_id': employeeId,
+      'name': name,
+      'photo_url': photoUrl,
+      'subject': subject,
+      'dob': dob.toIso8601String(),
+      'joining_date': joiningDate.toIso8601String(),
+    };
+  }
+
+  String get formattedDob {
+    return "${dob.day.toString().padLeft(2, '0')}-${dob.month.toString().padLeft(2, '0')}-${dob.year}";
   }
 
   String get formattedJoiningDate {

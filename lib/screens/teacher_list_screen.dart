@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hism_management_system/controllers/teacher_controller.dart';
 import 'package:hism_management_system/models/teacher.dart';
 import 'package:hism_management_system/screens/teacher_detail_screen.dart';
+import 'package:hism_management_system/screens/teacher_insert_screen.dart';
 
 class TeacherListScreen extends StatefulWidget {
   final String role;
@@ -31,6 +32,25 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Teachers'), centerTitle: false),
+      floatingActionButton: widget.role == '1'
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const TeacherInsertScreen(),
+                  ),
+                ).then((shouldRefresh) {
+                  if (shouldRefresh == true) {
+                    setState(() {
+                      _controller.loadTeachers();
+                    });
+                  }
+                });
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: SafeArea(
         child: Column(
           children: [
