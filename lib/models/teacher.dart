@@ -27,7 +27,7 @@ class Teacher {
   }
 
   String get formattedJoiningDate {
-    return "${joiningDate.year}-${joiningDate.month.toString().padLeft(2, '0')}-${joiningDate.day.toString().padLeft(2, '0')}";
+    return "${joiningDate.day.toString().padLeft(2, '0')}-${joiningDate.month.toString().padLeft(2, '0')}-${joiningDate.year}";
   }
 
   String get initials {
