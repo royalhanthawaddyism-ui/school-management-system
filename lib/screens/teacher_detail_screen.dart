@@ -242,25 +242,34 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                             ),
 
                             Positioned(
-                              top: height * 0.20,
-                              left: width * 0.32,
-                              right: width * 0.08,
+                              left: width * 0.23,
+                              right: width * 0.05,
+                              bottom: height * 0.3,
                               child: AspectRatio(
-                                aspectRatio: 1,
-                                child: CircleAvatar(
-                                  backgroundColor: Colors.grey[300],
-                                  backgroundImage:
-                                      teacher.photoUrl != null &&
-                                          teacher.photoUrl!.isNotEmpty
-                                      ? NetworkImage(teacher.photoUrl!)
-                                      : null,
+                                aspectRatio: 3 / 4,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                    image:
+                                        teacher.photoUrl != null &&
+                                            teacher.photoUrl!.isNotEmpty
+                                        ? DecorationImage(
+                                            image: NetworkImage(
+                                              teacher.photoUrl!,
+                                            ),
+                                            fit: BoxFit.contain,
+                                          )
+                                        : null,
+                                  ),
                                   child:
                                       teacher.photoUrl == null ||
                                           teacher.photoUrl!.isEmpty
-                                      ? Icon(
-                                          Icons.person,
-                                          size: width * 0.22,
-                                          color: Colors.grey[600],
+                                      ? Center(
+                                          child: Icon(
+                                            Icons.person,
+                                            size: width * 0.25,
+                                            color: Colors.grey[400],
+                                          ),
                                         )
                                       : null,
                                 ),
