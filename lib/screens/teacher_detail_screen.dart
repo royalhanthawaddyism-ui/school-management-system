@@ -244,7 +244,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                             Positioned(
                               left: width * 0.23,
                               right: width * 0.05,
-                              bottom: height * 0.3,
+                              bottom: height * 0.314,
                               child: AspectRatio(
                                 aspectRatio: 3 / 4,
                                 child: Container(
@@ -258,6 +258,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                                               teacher.photoUrl!,
                                             ),
                                             fit: BoxFit.contain,
+                                            alignment: Alignment.bottomCenter,
                                           )
                                         : null,
                                   ),
@@ -313,7 +314,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                             Positioned(
                               left: width * 0.26,
                               right: width * 0.05,
-                              top: height * 0.7,
+                              top: height * 0.695,
                               child: Container(
                                 alignment: Alignment.center,
                                 child: FittedBox(

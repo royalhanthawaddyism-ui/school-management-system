@@ -1,8 +1,10 @@
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hism_management_system/models/teacher.dart';
 
 class TeacherService {
   final SupabaseClient _supabase = Supabase.instance.client;
+  static const int maxPhotoSizeBytes = 1024 * 1024;
 
   Future<List<Teacher>> getActiveTeachers() async {
     try {
@@ -24,6 +26,42 @@ class TeacherService {
     } catch (error) {
       throw Exception('Database operation failed: $error');
     }
+  }
+
+  static String? validatePhotoSize(int sizeInBytes) {
+    if (sizeInBytes <= maxPhotoSizeBytes) {
+      return null;
+    }
+    return 'Photo must be under 1 MB.';
+  }
+
+  Future<String> uploadTeacherPhoto({
+    required XFile photo,
+    required String employeeId,
+  }) async {
+    final photoBytes = await photo.readAsBytes();
+    final validationMessage = validatePhotoSize(photoBytes.length);
+    if (validationMessage != null) {
+      throw ArgumentError(validationMessage);
+    }
+
+    final extension = photo.name.contains('.')
+        ? photo.name.substring(photo.name.lastIndexOf('.'))
+        : '.jpg';
+    final safeEmployeeId = employeeId.isNotEmpty
+        ? employeeId.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_')
+        : 'teacher';
+    final storagePath = '$safeEmployeeId$extension';
+
+    await _supabase.storage
+        .from('profile-photos')
+        .uploadBinary(
+          storagePath,
+          photoBytes,
+          fileOptions: FileOptions(contentType: photo.mimeType ?? 'image/jpeg'),
+        );
+
+    return _supabase.storage.from('profile-photos').getPublicUrl(storagePath);
   }
 
   Future<void> deleteTeacher(String employeeId) async {

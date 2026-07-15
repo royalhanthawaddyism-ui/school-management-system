@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hism_management_system/models/teacher.dart';
 import 'package:hism_management_system/services/teacher_service.dart';
+import 'package:image_picker/image_picker.dart';
 
 class TeacherController extends ChangeNotifier {
   final TeacherService _teacherService = TeacherService();
@@ -12,9 +13,10 @@ class TeacherController extends ChangeNotifier {
   final dobController = TextEditingController();
   final phoneController = TextEditingController();
   final addressController = TextEditingController();
-  final photoUrlController = TextEditingController();
+  final ImagePicker imagePicker = ImagePicker();
   final joiningDateController = TextEditingController();
 
+  XFile? selectedPhoto;
   DateTime? _selectedDob;
   DateTime? get selectedDob => _selectedDob;
   DateTime? _selectedJoiningDate;
@@ -124,12 +126,18 @@ class TeacherController extends ChangeNotifier {
     _isSaving = true;
     notifyListeners();
 
+    String photoUrl = '';
+    if (selectedPhoto != null) {
+      photoUrl = await TeacherService().uploadTeacherPhoto(
+        photo: selectedPhoto!,
+        employeeId: employeeIdController.text.trim(),
+      );
+    }
+
     final newTeacher = Teacher(
       employeeId: employeeIdController.text.trim(),
       name: nameController.text.trim(),
-      photoUrl: photoUrlController.text.trim().isEmpty
-          ? null
-          : photoUrlController.text.trim(),
+      photoUrl: photoUrl,
       subject: subjectController.text.trim(),
       dob: _selectedDob!,
       gender: selectedGender ?? '',
@@ -167,6 +175,38 @@ class TeacherController extends ChangeNotifier {
     );
   }
 
+  Future<void> pickPhoto({required BuildContext context}) async {
+    try {
+      final photo = await imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 100,
+      );
+      if (photo == null) {
+        return;
+      }
+
+      final photoBytes = await photo.readAsBytes();
+      final validationMessage = TeacherService.validatePhotoSize(
+        photoBytes.length,
+      );
+      if (validationMessage != null) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(validationMessage)));
+        return;
+      }
+
+      selectedPhoto = photo;
+      notifyListeners();
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Unable to choose photo: $error')));
+    }
+  }
+
   @override
   void dispose() {
     employeeIdController.dispose();
@@ -175,7 +215,6 @@ class TeacherController extends ChangeNotifier {
     dobController.dispose();
     phoneController.dispose();
     addressController.dispose();
-    photoUrlController.dispose();
     joiningDateController.dispose();
     super.dispose();
   }

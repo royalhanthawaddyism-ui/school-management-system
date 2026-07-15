@@ -162,13 +162,29 @@ class _TeacherInsertScreenState extends State<TeacherInsertScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                TextFormField(
-                  controller: _controller.photoUrlController,
-                  decoration: const InputDecoration(
-                    labelText: 'Photo URL (Optional)',
-                    border: OutlineInputBorder(),
+                OutlinedButton.icon(
+                  onPressed: _controller.isSaving
+                      ? null
+                      : () => _controller.pickPhoto(context: context),
+                  icon: const Icon(Icons.photo_camera),
+                  label: Text(
+                    _controller.selectedPhoto == null
+                        ? 'Select Teacher Photo'
+                        : 'Change Teacher Photo',
                   ),
                 ),
+                if (_controller.selectedPhoto != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Selected: ${_controller.selectedPhoto!.name}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Photo must be under 1 MB.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
                 const SizedBox(height: 12),
 
                 // --- Joining Date ---
