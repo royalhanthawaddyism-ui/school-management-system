@@ -10,6 +10,8 @@ class TeacherController extends ChangeNotifier {
   final nameController = TextEditingController();
   final subjectController = TextEditingController();
   final dobController = TextEditingController();
+  final phoneController = TextEditingController();
+  final addressController = TextEditingController();
   final photoUrlController = TextEditingController();
   final joiningDateController = TextEditingController();
 
@@ -24,10 +26,16 @@ class TeacherController extends ChangeNotifier {
   List<Teacher> _teachers = [];
   bool _isLoading = false;
   String? _errorMessage;
+  String? selectedGender;
 
   List<Teacher> get teachers => _teachers;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  void setGender(String? value) {
+    selectedGender = value;
+    notifyListeners();
+  }
 
   Future<void> loadTeachers() async {
     _isLoading = true;
@@ -71,6 +79,7 @@ class TeacherController extends ChangeNotifier {
         name: '',
         subject: '',
         dob: picked,
+        gender: '',
         joiningDate: DateTime.now(),
       );
 
@@ -95,6 +104,7 @@ class TeacherController extends ChangeNotifier {
         name: '',
         subject: '',
         dob: selectedDob ?? DateTime(1995),
+        gender: '',
         joiningDate: pickedDate,
       );
 
@@ -122,6 +132,9 @@ class TeacherController extends ChangeNotifier {
           : photoUrlController.text.trim(),
       subject: subjectController.text.trim(),
       dob: _selectedDob!,
+      gender: selectedGender ?? '',
+      phone: phoneController.text.trim(),
+      address: addressController.text.trim(),
       joiningDate: _selectedJoiningDate!,
     );
 
@@ -159,6 +172,9 @@ class TeacherController extends ChangeNotifier {
     employeeIdController.dispose();
     nameController.dispose();
     subjectController.dispose();
+    dobController.dispose();
+    phoneController.dispose();
+    addressController.dispose();
     photoUrlController.dispose();
     joiningDateController.dispose();
     super.dispose();

@@ -5,6 +5,9 @@ class Teacher {
   final String? photoUrl;
   final String subject;
   final DateTime dob;
+  final String gender;
+  final String? phone;
+  final String? address;
   final DateTime joiningDate;
 
   Teacher({
@@ -14,6 +17,9 @@ class Teacher {
     this.photoUrl,
     required this.subject,
     required this.dob,
+    required this.gender,
+    this.phone,
+    this.address,
     required this.joiningDate,
   });
 
@@ -27,6 +33,9 @@ class Teacher {
       dob: json['dob'] != null
           ? DateTime.parse(json['dob'] as String)
           : DateTime.now(),
+      gender: json['gender'] != null ? (json['gender'] as String) : 'Male',
+      phone: json['phone'] as String?,
+      address: json['address'] as String?,
       joiningDate: json['joining_date'] != null
           ? DateTime.parse(json['joining_date'] as String)
           : DateTime.now(),
@@ -40,6 +49,9 @@ class Teacher {
       'photo_url': photoUrl,
       'subject': subject,
       'dob': dob.toIso8601String(),
+      'gender': gender,
+      'phone': phone,
+      'address': address,
       'joining_date': joiningDate.toIso8601String(),
     };
   }
