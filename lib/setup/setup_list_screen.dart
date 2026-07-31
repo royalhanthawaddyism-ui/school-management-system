@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hism_management_system/manage/year_list.dart';
+import 'package:hism_management_system/setup/year_list.dart';
 // Import your screen files as you build them:
 // import 'package:hism_management_system/screens/class_list.dart';
 // import 'package:hism_management_system/screens/subject_list.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:hism_management_system/screens/profile_list_screen.dart';
-import 'package:hism_management_system/manage/setup_list_screen.dart';
+import 'package:hism_management_system/setup/setup_list_screen.dart';
 import 'package:hism_management_system/screens/setting_screen.dart';
 import 'package:hism_management_system/screens/student_list_screen.dart';
 import 'package:hism_management_system/screens/teacher_list_screen.dart';
