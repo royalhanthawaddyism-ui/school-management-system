@@ -13,8 +13,6 @@ class YearController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // year_controller.dart ထဲမှ loadYears, addYear, editYear အပိုင်းများကို ဤသို့ပြင်ပါ-
-
   Future<void> loadYears() async {
     _isLoading = true;
     _errorMessage = null;
@@ -22,7 +20,10 @@ class YearController extends ChangeNotifier {
 
     try {
       _years = await _service.fetchYears();
-      _years.sort((a, b) => a.id.compareTo(b.id));
+      // Numerical sort by ID
+      _years.sort(
+        (a, b) => (int.tryParse(a.id) ?? 0).compareTo(int.tryParse(b.id) ?? 0),
+      );
     } catch (e) {
       _errorMessage = e.toString().replaceAll('Exception: ', '');
     } finally {
@@ -35,7 +36,10 @@ class YearController extends ChangeNotifier {
     try {
       final newYear = await _service.createYear(name);
       _years.add(newYear);
-      _years.sort((a, b) => a.id.compareTo(b.id));
+      // Numerical sort by ID
+      _years.sort(
+        (a, b) => (int.tryParse(a.id) ?? 0).compareTo(int.tryParse(b.id) ?? 0),
+      );
       notifyListeners();
       return true;
     } catch (e) {
@@ -57,7 +61,12 @@ class YearController extends ChangeNotifier {
           createdAt: _years[index].createdAt,
           updatedAt: DateTime.now(),
         );
-        _years.sort((a, b) => a.id.compareTo(b.id));
+        // Numerical sort by ID
+        _years.sort(
+          (a, b) =>
+              (int.tryParse(a.id) ?? 0).compareTo(int.tryParse(b.id) ?? 0),
+        );
+        notifyListeners();
       }
       return true;
     } catch (e) {
