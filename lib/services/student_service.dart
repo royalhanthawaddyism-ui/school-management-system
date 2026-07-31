@@ -31,7 +31,7 @@ class StudentService {
         .from('years')
         .select('id, name')
         .eq('deleted', 0)
-        .order('order_no', ascending: true);
+        .order('id', ascending: true);
     return (response as List).cast<Map<String, dynamic>>();
   }
 
