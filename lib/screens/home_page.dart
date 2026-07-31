@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:hism_management_system/screens/profile_list_screen.dart';
-import 'package:hism_management_system/screens/settings_page.dart';
+import 'package:hism_management_system/manage/setup_list_screen.dart';
 import 'package:hism_management_system/screens/setting_screen.dart';
 import 'package:hism_management_system/screens/student_list_screen.dart';
 import 'package:hism_management_system/screens/teacher_list_screen.dart';
@@ -31,7 +31,7 @@ class _HomePageState extends State<HomePage> {
   List<Widget> get _pages => [
     _HomeTab(role: widget.role, parentId: widget.parentId),
     if (isAdmin) ProfileListScreen(),
-    if (isAdmin) const SettingsPage(),
+    if (isAdmin) const SetupListScreen(),
   ];
 
   static const _pageTitlesForNormal = ['Royal Hanthawaddy ISM'];
@@ -43,13 +43,13 @@ class _HomePageState extends State<HomePage> {
   static const _pageTitlesForAdmin = [
     'Royal Hanthawaddy ISM',
     'User Accounts',
-    'Settings',
+    'Setup Lists',
   ];
 
   static const _navigationItemsForAdmin = [
     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
     BottomNavigationBarItem(icon: Icon(Icons.person), label: 'User Accounts'),
-    BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+    BottomNavigationBarItem(icon: Icon(Icons.build), label: 'Setup Lists'),
   ];
 
   void _onItemTapped(int index) {
