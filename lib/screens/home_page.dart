@@ -43,13 +43,13 @@ class _HomePageState extends State<HomePage> {
   static const _pageTitlesForAdmin = [
     'Royal Hanthawaddy ISM',
     'User Accounts',
-    'Setup Lists',
+    'Setup Data',
   ];
 
   static const _navigationItemsForAdmin = [
     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
     BottomNavigationBarItem(icon: Icon(Icons.person), label: 'User Accounts'),
-    BottomNavigationBarItem(icon: Icon(Icons.build), label: 'Setup Lists'),
+    BottomNavigationBarItem(icon: Icon(Icons.build), label: 'Setup Data'),
   ];
 
   void _onItemTapped(int index) {
