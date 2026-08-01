@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../controllers/profile_controller.dart';
 import '../models/profile.dart';
@@ -20,6 +21,7 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
 
   bool _isLoading = true;
   String _error = '';
+  DateTime? _lastBackPressTime;
 
   @override
   void initState() {
@@ -27,9 +29,18 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
     loadProfiles();
   }
 
-  Future<void> loadProfiles() async {
+  Future<void> loadProfiles({bool showLoading = true}) async {
+    if (showLoading) {
+      setState(() {
+        _isLoading = true;
+        _error = '';
+      });
+    }
+
     try {
       final data = await _controller.fetchProfiles();
+
+      if (!mounted) return;
 
       setState(() {
         _profiles = data;
@@ -37,6 +48,8 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
+
       setState(() {
         _error = e.toString();
         _isLoading = false;
@@ -79,117 +92,170 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            // 🔍 SEARCH BOX
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: TextField(
-                controller: _searchController,
-                onChanged: searchProfiles,
-                decoration: InputDecoration(
-                  hintText: "Search email or role",
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          return;
+        }
+
+        final now = DateTime.now();
+        final isDoubleBack =
+            _lastBackPressTime != null &&
+            now.difference(_lastBackPressTime!) <= const Duration(seconds: 2);
+
+        if (isDoubleBack) {
+          SystemNavigator.pop();
+          return;
+        }
+
+        _lastBackPressTime = now;
+        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Press back again to exit'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Column(
+            children: [
+              // 🔍 SEARCH BOX
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: searchProfiles,
+                  decoration: InputDecoration(
+                    hintText: "Search email or role",
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // 📄 LIST
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error.isNotEmpty
-                  ? Center(child: Text(_error))
-                  : _filteredProfiles.isEmpty
-                  ? const Center(child: Text("No profiles found"))
-                  : ListView.builder(
-                      itemCount: _filteredProfiles.length,
-                      itemBuilder: (context, index) {
-                        final profile = _filteredProfiles[index];
+              // 📄 LIST
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () => loadProfiles(showLoading: false),
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _error.isNotEmpty
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: [Center(child: Text(_error))],
+                        )
+                      : _filteredProfiles.isEmpty
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: const [
+                            Center(child: Text("No profiles found")),
+                          ],
+                        )
+                      : ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemCount: _filteredProfiles.length,
+                          itemBuilder: (context, index) {
+                            final profile = _filteredProfiles[index];
 
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          elevation: 3,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ListTile(
-                            onTap: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      ProfileEditScreen(profile: profile),
-                                ),
-                              );
-                              loadProfiles();
-                            },
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-
-                            leading: const CircleAvatar(
-                              backgroundColor: Color.fromARGB(255, 8, 44, 98),
-                              child: Icon(Icons.person, color: Colors.white),
-                            ),
-
-                            title: Text(
-                              profile.email,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
+                            return Card(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
                               ),
-                            ),
-
-                            subtitle: Text(
-                              profile.roleLabel,
-                              style: TextStyle(color: Colors.grey.shade700),
-                            ),
-
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text("Delete Profile"),
-                                    content: const Text(
-                                      "Are you sure you want to delete this user?",
+                              elevation: 3,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ListTile(
+                                onTap: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          ProfileEditScreen(profile: profile),
                                     ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text("Cancel"),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                          deleteProfile(profile.id);
-                                        },
-                                        child: const Text(
-                                          "Delete",
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ),
-                                    ],
+                                  );
+                                  loadProfiles(showLoading: false);
+                                },
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+
+                                leading: const CircleAvatar(
+                                  backgroundColor: Color.fromARGB(
+                                    255,
+                                    8,
+                                    44,
+                                    98,
                                   ),
-                                );
-                              },
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
+                                  child: Icon(
+                                    Icons.person,
+                                    color: Colors.white,
+                                  ),
+                                ),
+
+                                title: Text(
+                                  profile.email,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+
+                                subtitle: Text(
+                                  profile.roleLabel,
+                                  style: TextStyle(color: Colors.grey.shade700),
+                                ),
+
+                                trailing: IconButton(
+                                  icon: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text("Delete Profile"),
+                                        content: const Text(
+                                          "Are you sure you want to delete this user?",
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context),
+                                            child: const Text("Cancel"),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                              deleteProfile(profile.id);
+                                            },
+                                            child: const Text(
+                                              "Delete",
+                                              style: TextStyle(
+                                                color: Colors.red,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
