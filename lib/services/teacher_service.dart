@@ -10,7 +10,9 @@ class TeacherService {
     try {
       final response = await _supabase
           .from('teachers')
-          .select('id, employee_id, name, photo_url, subject, joining_date')
+          .select(
+            'id, employee_id, name, photo_url, subject, dob, gender, phone, address, joining_date',
+          )
           .eq('deleted', 0)
           .order('name', ascending: true);
 
@@ -23,6 +25,22 @@ class TeacherService {
   Future<void> createTeacher(Teacher teacher) async {
     try {
       await _supabase.from('teachers').insert(teacher.toJson());
+    } catch (error) {
+      throw Exception('Database operation failed: $error');
+    }
+  }
+
+  Future<void> updateTeacher(Teacher teacher) async {
+    final teacherId = teacher.id;
+    if (teacherId == null) {
+      throw Exception('Teacher id is required for update.');
+    }
+
+    try {
+      await _supabase
+          .from('teachers')
+          .update(teacher.toJson())
+          .eq('id', teacherId);
     } catch (error) {
       throw Exception('Database operation failed: $error');
     }

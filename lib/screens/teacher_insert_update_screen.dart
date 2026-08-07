@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hism_management_system/controllers/teacher_controller.dart';
+import 'package:hism_management_system/models/teacher.dart';
 
 class TeacherInsertScreen extends StatefulWidget {
-  const TeacherInsertScreen({super.key});
+  const TeacherInsertScreen({super.key, this.teacher});
+
+  final Teacher? teacher;
 
   @override
   State<TeacherInsertScreen> createState() => _TeacherInsertScreenState();
@@ -16,6 +19,10 @@ class _TeacherInsertScreenState extends State<TeacherInsertScreen> {
     super.initState();
     _controller = TeacherController();
     _controller.addListener(_refresh);
+
+    if (widget.teacher != null) {
+      _controller.populateFromTeacher(widget.teacher!);
+    }
   }
 
   @override
@@ -44,8 +51,10 @@ class _TeacherInsertScreenState extends State<TeacherInsertScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.teacher != null;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Teacher')),
+      appBar: AppBar(title: Text(isEditing ? 'Update Teacher' : 'Add Teacher')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -222,7 +231,7 @@ class _TeacherInsertScreenState extends State<TeacherInsertScreen> {
                             valueColor: AlwaysStoppedAnimation(Colors.white),
                           ),
                         )
-                      : const Text('Save Teacher'),
+                      : Text(isEditing ? 'Update Teacher' : 'Save Teacher'),
                 ),
               ],
             ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hism_management_system/controllers/teacher_controller.dart';
 import 'package:hism_management_system/models/teacher.dart';
 import 'package:hism_management_system/screens/teacher_detail_screen.dart';
-import 'package:hism_management_system/screens/teacher_insert_screen.dart';
+import 'package:hism_management_system/screens/teacher_insert_update_screen.dart';
 
 class TeacherListScreen extends StatefulWidget {
   final String role;

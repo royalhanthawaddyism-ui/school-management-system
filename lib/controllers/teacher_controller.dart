@@ -4,7 +4,14 @@ import 'package:hism_management_system/services/teacher_service.dart';
 import 'package:image_picker/image_picker.dart';
 
 class TeacherController extends ChangeNotifier {
-  final TeacherService _teacherService = TeacherService();
+  TeacherController({this._teacherService});
+
+  TeacherService? _teacherService;
+  TeacherService get teacherService {
+    _teacherService ??= TeacherService();
+    return _teacherService!;
+  }
+
   final formKey = GlobalKey<FormState>();
 
   final employeeIdController = TextEditingController();
@@ -29,13 +36,36 @@ class TeacherController extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   String? selectedGender;
+  String? existingPhotoUrl;
+  Teacher? _editingTeacher;
 
   List<Teacher> get teachers => _teachers;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+  bool get isEditing => _editingTeacher != null;
 
   void setGender(String? value) {
     selectedGender = value;
+    notifyListeners();
+  }
+
+  void populateFromTeacher(Teacher teacher) {
+    _editingTeacher = teacher;
+    existingPhotoUrl = teacher.photoUrl;
+
+    employeeIdController.text = teacher.employeeId;
+    nameController.text = teacher.name;
+    subjectController.text = teacher.subject;
+    dobController.text = teacher.formattedDob;
+    phoneController.text = teacher.phone ?? '';
+    addressController.text = teacher.address ?? '';
+    joiningDateController.text = teacher.formattedJoiningDate;
+
+    _selectedDob = teacher.dob;
+    _selectedJoiningDate = teacher.joiningDate;
+    selectedGender = teacher.gender;
+    selectedPhoto = null;
+
     notifyListeners();
   }
 
@@ -45,7 +75,7 @@ class TeacherController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _teachers = await _teacherService.getActiveTeachers();
+      _teachers = await teacherService.getActiveTeachers();
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -126,15 +156,16 @@ class TeacherController extends ChangeNotifier {
     _isSaving = true;
     notifyListeners();
 
-    String photoUrl = '';
+    String photoUrl = existingPhotoUrl ?? '';
     if (selectedPhoto != null) {
-      photoUrl = await TeacherService().uploadTeacherPhoto(
+      photoUrl = await teacherService.uploadTeacherPhoto(
         photo: selectedPhoto!,
         employeeId: employeeIdController.text.trim(),
       );
     }
 
-    final newTeacher = Teacher(
+    final teacherToSave = Teacher(
+      id: _editingTeacher?.id,
       employeeId: employeeIdController.text.trim(),
       name: nameController.text.trim(),
       photoUrl: photoUrl,
@@ -147,9 +178,15 @@ class TeacherController extends ChangeNotifier {
     );
 
     try {
-      await _teacherService.createTeacher(newTeacher);
-      // ignore: use_build_context_synchronously
-      _showSnackBar(context, 'Teacher recorded successfully!', Colors.green);
+      if (isEditing) {
+        await teacherService.updateTeacher(teacherToSave);
+        // ignore: use_build_context_synchronously
+        _showSnackBar(context, 'Teacher updated successfully!', Colors.green);
+      } else {
+        await teacherService.createTeacher(teacherToSave);
+        // ignore: use_build_context_synchronously
+        _showSnackBar(context, 'Teacher recorded successfully!', Colors.green);
+      }
       return true;
     } catch (e) {
       _showSnackBar(

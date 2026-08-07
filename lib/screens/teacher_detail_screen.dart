@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:gal/gal.dart';
 import 'package:hism_management_system/models/teacher.dart';
+import 'package:hism_management_system/screens/teacher_insert_update_screen.dart';
 import 'package:hism_management_system/services/teacher_service.dart';
 
 class TeacherDetailScreen extends StatefulWidget {
@@ -45,6 +46,17 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
       );
     } finally {
       if (mounted) setState(() => _isDeleting = false);
+    }
+  }
+
+  Future<void> _openEditScreen() async {
+    final shouldRefresh = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => TeacherInsertScreen(teacher: teacher)),
+    );
+
+    if (shouldRefresh == true && mounted) {
+      Navigator.pop(context, true);
     }
   }
 
@@ -120,13 +132,7 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
             IconButton(
               tooltip: 'Update teacher',
               icon: const Icon(Icons.edit),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Update flow is not implemented yet.'),
-                  ),
-                );
-              },
+              onPressed: _openEditScreen,
             ),
           if (canEdit)
             IconButton(
