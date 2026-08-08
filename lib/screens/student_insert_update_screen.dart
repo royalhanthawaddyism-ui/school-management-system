@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:hism_management_system/controllers/student_controller.dart';
 
-class StudentInsertScreen extends StatefulWidget {
-  const StudentInsertScreen({super.key});
+class StudentInsertUpdateScreen extends StatefulWidget {
+  const StudentInsertUpdateScreen({super.key});
 
   @override
-  State<StudentInsertScreen> createState() => _StudentInsertScreenState();
+  State<StudentInsertUpdateScreen> createState() =>
+      _StudentInsertUpdateScreenState();
 }
 
-class _StudentInsertScreenState extends State<StudentInsertScreen> {
+class _StudentInsertUpdateScreenState extends State<StudentInsertUpdateScreen> {
   late final StudentController _controller;
 
   @override

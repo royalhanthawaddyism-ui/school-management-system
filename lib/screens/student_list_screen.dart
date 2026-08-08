@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hism_management_system/controllers/student_controller.dart';
 import 'package:hism_management_system/models/student.dart';
 import 'package:hism_management_system/screens/student_detail_screen.dart';
-import 'package:hism_management_system/screens/student_insert_screen.dart';
+import 'package:hism_management_system/screens/student_insert_update_screen.dart';
 
 class StudentListScreen extends StatefulWidget {
   final String role;
@@ -48,7 +48,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                 Navigator.push<bool>(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const StudentInsertScreen(),
+                    builder: (_) => const StudentInsertUpdateScreen(),
                   ),
                 ).then((shouldRefresh) {
                   if (shouldRefresh == true) {

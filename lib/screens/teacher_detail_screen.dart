@@ -52,7 +52,9 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
   Future<void> _openEditScreen() async {
     final shouldRefresh = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(builder: (_) => TeacherInsertScreen(teacher: teacher)),
+      MaterialPageRoute(
+        builder: (_) => TeacherInsertUpdateScreen(teacher: teacher),
+      ),
     );
 
     if (shouldRefresh == true && mounted) {

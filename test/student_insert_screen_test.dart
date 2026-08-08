@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hism_management_system/screens/student_insert_screen.dart';
+import 'package:hism_management_system/screens/student_insert_update_screen.dart';
 
 void main() {
   testWidgets('Date of birth field uses a calendar picker', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: StudentInsertScreen()));
+    await tester.pumpWidget(
+      const MaterialApp(home: StudentInsertUpdateScreen()),
+    );
 
     final dobField = tester.widget<TextField>(
       find.byWidgetPredicate(

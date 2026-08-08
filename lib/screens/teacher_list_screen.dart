@@ -38,7 +38,7 @@ class _TeacherListScreenState extends State<TeacherListScreen> {
                 Navigator.push<bool>(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const TeacherInsertScreen(),
+                    builder: (_) => const TeacherInsertUpdateScreen(),
                   ),
                 ).then((shouldRefresh) {
                   if (shouldRefresh == true) {
