@@ -85,6 +85,21 @@ class StudentService {
     });
   }
 
+  Future<void> updateStudent(Student student) async {
+    await _client
+        .from('students')
+        .update({
+          'name': student.name,
+          'parent_id': student.parentName.isEmpty ? null : student.parentName,
+          'year_id': student.year.isEmpty ? null : student.year,
+          'photo_url': student.photoUrl,
+          'dob': student.dob,
+          'address': student.address,
+          'gender': student.gender.isEmpty ? null : student.gender,
+        })
+        .eq('student_id', student.studentId);
+  }
+
   Future<void> deleteStudent(String studentId) async {
     final studentRow = await _client
         .from('students')

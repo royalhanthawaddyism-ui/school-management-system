@@ -45,13 +45,13 @@ class _StudentListScreenState extends State<StudentListScreen> {
       floatingActionButton: widget.role == '1'
           ? FloatingActionButton(
               onPressed: () {
-                Navigator.push<bool>(
+                Navigator.push<Student?>(
                   context,
                   MaterialPageRoute(
                     builder: (_) => const StudentInsertUpdateScreen(),
                   ),
-                ).then((shouldRefresh) {
-                  if (shouldRefresh == true) {
+                ).then((returnedStudent) {
+                  if (returnedStudent is Student) {
                     setState(() {
                       _studentsFuture = _fetchStudents();
                     });

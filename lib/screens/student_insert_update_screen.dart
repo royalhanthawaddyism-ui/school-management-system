@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hism_management_system/controllers/student_controller.dart';
+import 'package:hism_management_system/models/student.dart';
 
 class StudentInsertUpdateScreen extends StatefulWidget {
-  const StudentInsertUpdateScreen({super.key});
+  const StudentInsertUpdateScreen({super.key, this.student});
+
+  final Student? student;
 
   @override
   State<StudentInsertUpdateScreen> createState() =>
@@ -17,6 +20,9 @@ class _StudentInsertUpdateScreenState extends State<StudentInsertUpdateScreen> {
     super.initState();
     _controller = StudentController();
     _controller.addListener(_refresh);
+    if (widget.student != null) {
+      _controller.populateFromStudent(widget.student!);
+    }
     _controller.loadYears(context: context);
   }
 
@@ -34,20 +40,21 @@ class _StudentInsertUpdateScreenState extends State<StudentInsertUpdateScreen> {
   }
 
   Future<void> _saveStudent() async {
-    final saved = await _controller.saveStudent(
+    final savedStudent = await _controller.saveStudent(
       context: context,
       formKey: _controller.formKey,
     );
 
-    if (saved && mounted) {
-      Navigator.pop(context, true);
+    if (savedStudent != null && mounted) {
+      Navigator.pop(context, savedStudent);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.student != null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Student')),
+      appBar: AppBar(title: Text(isEditing ? 'Update Student' : 'Add Student')),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -127,35 +134,68 @@ class _StudentInsertUpdateScreenState extends State<StudentInsertUpdateScreen> {
                   ),
                   maxLines: 1,
                   validator: (_) {
-                    if (_controller.selectedParent == null) {
+                    if (_controller.selectedParent == null &&
+                        (_controller.existingParentId == null ||
+                            _controller.existingParentId!.isEmpty)) {
                       return 'Please choose a parent.';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _controller.selectedYearId,
-                  decoration: const InputDecoration(
-                    labelText: 'Year',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: _controller.years.map((year) {
-                    final yearId = year['id']?.toString() ?? '';
-                    final yearName = year['name']?.toString() ?? 'Unnamed year';
-                    return DropdownMenuItem<String>(
-                      value: yearId,
-                      child: Text(yearName),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    _controller.setYear(value);
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Year is required';
+                Builder(
+                  builder: (context) {
+                    final seenIds = <String>{};
+                    final items = <DropdownMenuItem<String>>[];
+                    for (final year in _controller.years) {
+                      final yearId = year['id']?.toString() ?? '';
+                      if (yearId.isEmpty || seenIds.contains(yearId)) {
+                        continue;
+                      }
+                      seenIds.add(yearId);
+                      items.add(
+                        DropdownMenuItem<String>(
+                          value: yearId,
+                          child: Text(
+                            year['name']?.toString() ?? 'Unnamed year',
+                          ),
+                        ),
+                      );
                     }
-                    return null;
+
+                    if (_controller.selectedYearId != null &&
+                        _controller.selectedYearId!.isNotEmpty &&
+                        !seenIds.contains(_controller.selectedYearId)) {
+                      final matched = _controller.years.firstWhere(
+                        (year) =>
+                            year['name']?.toString() ==
+                            _controller.selectedYearId,
+                        orElse: () => {},
+                      );
+                      if (matched.isNotEmpty) {
+                        _controller.selectedYearId = matched['id']?.toString();
+                      }
+                    }
+
+                    return DropdownButtonFormField<String>(
+                      initialValue: items.isEmpty
+                          ? null
+                          : _controller.selectedYearId,
+                      decoration: const InputDecoration(
+                        labelText: 'Year',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: items,
+                      onChanged: (value) {
+                        _controller.setYear(value);
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Year is required';
+                        }
+                        return null;
+                      },
+                    );
                   },
                 ),
                 const SizedBox(height: 12),
@@ -239,7 +279,7 @@ class _StudentInsertUpdateScreenState extends State<StudentInsertUpdateScreen> {
                             valueColor: AlwaysStoppedAnimation(Colors.white),
                           ),
                         )
-                      : const Text('Save Student'),
+                      : Text(isEditing ? 'Update Student' : 'Save Student'),
                 ),
               ],
             ),

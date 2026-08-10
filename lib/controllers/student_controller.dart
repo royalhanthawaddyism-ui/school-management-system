@@ -25,8 +25,14 @@ class StudentController extends ChangeNotifier {
   XFile? selectedPhoto;
   String? selectedGender;
   String? selectedYearId;
+  String? selectedYearName;
   List<Map<String, dynamic>> years = [];
   bool isSaving = false;
+  String? existingPhotoUrl;
+  Student? _editingStudent;
+
+  bool get isEditing => _editingStudent != null;
+  String? get existingParentId => _editingStudent?.parentName;
 
   @override
   void dispose() {
@@ -43,8 +49,31 @@ class StudentController extends ChangeNotifier {
       final loadedYears = await StudentService().fetchYears();
       if (!context.mounted) return;
 
-      years = loadedYears;
-      if (years.isNotEmpty) {
+      final uniqueYearMap = <String, Map<String, dynamic>>{};
+      for (final year in loadedYears) {
+        final yearId = year['id']?.toString() ?? '';
+        if (yearId.isNotEmpty) {
+          uniqueYearMap.putIfAbsent(yearId, () => year);
+        }
+      }
+
+      years = uniqueYearMap.values.toList();
+      if (selectedYearId != null && selectedYearId!.isNotEmpty) {
+        final selectedIdMatches = years.any(
+          (year) => year['id']?.toString() == selectedYearId,
+        );
+        if (!selectedIdMatches) {
+          final matchedYear = years.firstWhere(
+            (year) => year['name']?.toString() == selectedYearId,
+            orElse: () => {},
+          );
+          if (matchedYear.isNotEmpty) {
+            selectedYearId = matchedYear['id']?.toString();
+          }
+        }
+      }
+      if (years.isNotEmpty &&
+          (selectedYearId == null || selectedYearId!.isEmpty)) {
         selectedYearId = years.first['id'].toString();
       }
       notifyListeners();
@@ -171,16 +200,44 @@ class StudentController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> saveStudent({
+  void populateFromStudent(Student student) {
+    _editingStudent = student;
+    existingPhotoUrl = student.photoUrl;
+
+    studentIdController.text = student.studentId;
+    nameController.text = student.name;
+    dobController.text = student.dob;
+    addressController.text = student.address;
+    selectedGender = student.gender;
+    selectedYearName = student.year;
+    selectedYearId = null;
+    selectedParentOption = existingParentOption;
+    if (student.parentName.isNotEmpty) {
+      selectedParent = Parent(
+        id: student.parentName,
+        fatherName: '',
+        motherName: '',
+        phone: '',
+        address: '',
+      );
+      parentDisplayController.text = student.parentName;
+    }
+    selectedPhoto = null;
+    notifyListeners();
+  }
+
+  Future<Student?> saveStudent({
     required BuildContext context,
     required GlobalKey<FormState> formKey,
   }) async {
-    if (!formKey.currentState!.validate()) return false;
-    if (selectedParent == null) {
+    if (!formKey.currentState!.validate()) return null;
+
+    final parentId = selectedParent?.id ?? existingParentId ?? '';
+    if (parentId.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Please select a parent.')));
-      return false;
+      return null;
     }
 
     isSaving = true;
@@ -188,10 +245,10 @@ class StudentController extends ChangeNotifier {
 
     final studentId = studentIdController.text.trim();
     final name = nameController.text.trim();
-    final year = selectedYearId ?? '';
+    final year = selectedYearId ?? _editingStudent?.year ?? '';
     final dob = dobController.text.trim();
     final address = addressController.text.trim();
-    final gender = selectedGender ?? '';
+    final gender = selectedGender ?? _editingStudent?.gender ?? '';
 
     String? createdParentId;
 
@@ -207,7 +264,7 @@ class StudentController extends ChangeNotifier {
         );
       }
 
-      String photoUrl = '';
+      String photoUrl = existingPhotoUrl ?? '';
       if (selectedPhoto != null) {
         photoUrl = await StudentService().uploadStudentPhoto(
           photo: selectedPhoto!,
@@ -218,7 +275,7 @@ class StudentController extends ChangeNotifier {
       final student = Student(
         studentId: studentId,
         name: name,
-        parentName: selectedParent?.id ?? '',
+        parentName: selectedParent?.id ?? parentId,
         year: year,
         photoUrl: photoUrl,
         dob: dob,
@@ -226,8 +283,24 @@ class StudentController extends ChangeNotifier {
         gender: gender,
       );
 
-      await StudentService().createStudent(student);
-      return true;
+      if (isEditing) {
+        await StudentService().updateStudent(student);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Student updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        await StudentService().createStudent(student);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Student recorded successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+      return student;
     } catch (error) {
       if (createdParentId != null && createdParentId.isNotEmpty) {
         try {
@@ -242,7 +315,7 @@ class StudentController extends ChangeNotifier {
           SnackBar(content: Text('Unable to save student: $errorMessage')),
         );
       }
-      return false;
+      return null;
     } finally {
       isSaving = false;
       notifyListeners();

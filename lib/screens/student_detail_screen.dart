@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:gal/gal.dart'; // Crucial for actual storage injection
 import 'package:hism_management_system/controllers/student_controller.dart';
 import 'package:hism_management_system/models/student.dart';
+import 'package:hism_management_system/screens/student_insert_update_screen.dart';
 import 'package:hism_management_system/services/student_service.dart';
 
 class StudentDetailScreen extends StatefulWidget {
@@ -22,7 +23,7 @@ class StudentDetailScreen extends StatefulWidget {
 }
 
 class _StudentDetailScreenState extends State<StudentDetailScreen> {
-  late final Student student = widget.student;
+  late Student student = widget.student;
   bool _isDeleting = false;
   bool _isSavingImage = false;
 
@@ -125,12 +126,19 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
             IconButton(
               tooltip: 'Update student',
               icon: const Icon(Icons.edit),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Update flow is not implemented yet.'),
+              onPressed: () async {
+                final updatedStudent = await Navigator.push<Student?>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => StudentInsertUpdateScreen(student: student),
                   ),
                 );
+
+                if (updatedStudent != null && mounted) {
+                  setState(() {
+                    student = updatedStudent;
+                  });
+                }
               },
             ),
           if (canEdit)
