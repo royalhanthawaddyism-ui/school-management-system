@@ -71,6 +71,14 @@ class StudentController extends ChangeNotifier {
             selectedYearId = matchedYear['id']?.toString();
           }
         }
+      } else if (selectedYearName != null && selectedYearName!.isNotEmpty) {
+        final matchedYear = years.firstWhere(
+          (year) => year['name']?.toString() == selectedYearName,
+          orElse: () => {},
+        );
+        if (matchedYear.isNotEmpty) {
+          selectedYearId = matchedYear['id']?.toString();
+        }
       }
       if (years.isNotEmpty &&
           (selectedYearId == null || selectedYearId!.isEmpty)) {
@@ -285,6 +293,7 @@ class StudentController extends ChangeNotifier {
 
       if (isEditing) {
         await StudentService().updateStudent(student);
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Student updated successfully!'),
@@ -293,6 +302,7 @@ class StudentController extends ChangeNotifier {
         );
       } else {
         await StudentService().createStudent(student);
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Student recorded successfully!'),

@@ -135,9 +135,8 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                 );
 
                 if (updatedStudent != null && mounted) {
-                  setState(() {
-                    student = updatedStudent;
-                  });
+                  // ignore: use_build_context_synchronously
+                  Navigator.pop(context, true);
                 }
               },
             ),
