@@ -23,7 +23,7 @@ class ParentService {
     final baseSeed = seed.isEmpty ? 'parent' : 'parent_$seed';
     final uniqueSuffix = DateTime.now().microsecondsSinceEpoch.toString();
     // Append a domain so the generated value is a valid email address.
-    return '$baseSeed$uniqueSuffix@example.com';
+    return '$baseSeed$uniqueSuffix@hism.school';
   }
 
   Future<String> createParent(Parent parent) async {
