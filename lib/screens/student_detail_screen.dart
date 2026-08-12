@@ -150,7 +150,35 @@ class _StudentDetailScreenState extends State<StudentDetailScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.delete),
-              onPressed: _isDeleting ? null : _deleteStudent,
+              onPressed: _isDeleting
+                  ? null
+                  : () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Delete Student"),
+                          content: const Text(
+                            "Are you sure you want to delete this student?",
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text("Cancel"),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _deleteStudent();
+                              },
+                              child: const Text(
+                                "Delete",
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
             ),
         ],
       ),

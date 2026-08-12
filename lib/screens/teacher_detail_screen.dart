@@ -146,7 +146,35 @@ class _TeacherDetailScreenState extends State<TeacherDetailScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.delete),
-              onPressed: _isDeleting ? null : _deleteTeacher,
+              onPressed: _isDeleting
+                  ? null
+                  : () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text("Delete Teacher"),
+                          content: const Text(
+                            "Are you sure you want to delete this teacher?",
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text("Cancel"),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _deleteTeacher();
+                              },
+                              child: const Text(
+                                "Delete",
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
             ),
         ],
       ),
