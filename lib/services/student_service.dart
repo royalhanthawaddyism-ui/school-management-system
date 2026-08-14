@@ -52,13 +52,16 @@ class StudentService {
       throw ArgumentError(validationMessage);
     }
 
-    final extension = photo.name.contains('.')
-        ? photo.name.substring(photo.name.lastIndexOf('.'))
-        : '.jpg';
-    final safeStudentId = studentId.isNotEmpty
-        ? studentId.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_')
-        : 'student';
-    final storagePath = '$safeStudentId$extension';
+    // Use the original photo name for storage, but sanitize path separators
+    var fileName = photo.name;
+    if (fileName.isEmpty) {
+      final extension = photo.name.contains('.')
+          ? photo.name.substring(photo.name.lastIndexOf('.'))
+          : '.jpg';
+      fileName = 'student$extension';
+    }
+    // Replace any path separators or backslashes to avoid nested paths
+    final storagePath = fileName.replaceAll(RegExp(r'[\\/]+'), '_');
 
     await _client.storage
         .from('profile-photos')

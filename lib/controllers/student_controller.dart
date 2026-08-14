@@ -240,13 +240,15 @@ class StudentController extends ChangeNotifier {
   }) async {
     if (!formKey.currentState!.validate()) return null;
 
-    final parentId = selectedParent?.id ?? existingParentId ?? '';
-    if (parentId.isEmpty) {
+    // Ensure a parent was chosen either as an existing parent or a new parent
+    if (selectedParent == null &&
+        (existingParentId == null || existingParentId!.isEmpty)) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Please select a parent.')));
       return null;
     }
+    final parentId = selectedParent?.id ?? existingParentId ?? '';
 
     isSaving = true;
     notifyListeners();
