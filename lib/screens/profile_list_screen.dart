@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../controllers/profile_controller.dart';
 import '../models/profile.dart';
 import '../screens/profile_edit_screen.dart';
+import 'create_profile_screen.dart';
 
 class ProfileListScreen extends StatefulWidget {
   const ProfileListScreen({super.key});
@@ -18,6 +19,10 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
 
   List<Profile> _profiles = [];
   List<Profile> _filteredProfiles = [];
+
+  bool _filterAdmin = true;
+  bool _filterTeacher = true;
+  bool _filterParent = true;
 
   bool _isLoading = true;
   String _error = '';
@@ -58,12 +63,24 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
   }
 
   void searchProfiles(String value) {
-    final keyword = value.toLowerCase();
+    applyFilters(value);
+  }
+
+  void applyFilters([String? value]) {
+    final keyword = (value ?? _searchController.text).toLowerCase();
 
     setState(() {
       _filteredProfiles = _profiles.where((p) {
-        return p.email.toLowerCase().contains(keyword) ||
+        final matchesSearch =
+            p.email.toLowerCase().contains(keyword) ||
             p.roleLabel.toLowerCase().contains(keyword);
+
+        var roleAllowed = false;
+        if (_filterAdmin && p.role == '1') roleAllowed = true;
+        if (_filterTeacher && p.role == '2') roleAllowed = true;
+        if (_filterParent && p.role == '3') roleAllowed = true;
+
+        return matchesSearch && roleAllowed;
       }).toList();
     });
   }
@@ -122,19 +139,97 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              // 🔍 SEARCH BOX
               Padding(
                 padding: const EdgeInsets.all(12),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: searchProfiles,
-                  decoration: InputDecoration(
-                    hintText: "Search email or role",
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.65,
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: searchProfiles,
+                        decoration: InputDecoration(
+                          hintText: "Search email or role",
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final created = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const CreateProfileScreen(),
+                          ),
+                        );
+
+                        if (created == true) {
+                          loadProfiles();
+                        }
+                      },
+                      //icon: const Icon(Icons.add),
+                      label: const Text('Add'),
+                    ),
+                  ],
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  children: [
+                    // Admin
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _filterAdmin,
+                          onChanged: (v) => setState(() {
+                            _filterAdmin = v ?? false;
+                            applyFilters();
+                          }),
+                        ),
+                        const Text('Admin'),
+                      ],
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // Teacher
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _filterTeacher,
+                          onChanged: (v) => setState(() {
+                            _filterTeacher = v ?? false;
+                            applyFilters();
+                          }),
+                        ),
+                        const Text('Teacher'),
+                      ],
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // Parent
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _filterParent,
+                          onChanged: (v) => setState(() {
+                            _filterParent = v ?? false;
+                            applyFilters();
+                          }),
+                        ),
+                        const Text('Parent'),
+                      ],
+                    ),
+
+                    const Spacer(),
+                  ],
                 ),
               ),
 

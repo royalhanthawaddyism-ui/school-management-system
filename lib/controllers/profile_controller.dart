@@ -27,6 +27,18 @@ class ProfileController extends ChangeNotifier {
     );
   }
 
+  Future<String> createProfile({
+    required String email,
+    required String password,
+    required String role,
+  }) {
+    return ProfileService().createProfile(
+      email: email,
+      password: password,
+      role: role,
+    );
+  }
+
   Future<void> deleteProfile(String id) async {
     try {
       await ProfileService().deleteProfile(id);
