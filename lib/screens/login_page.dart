@@ -49,9 +49,9 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login Success. Your role is $role')),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('Login Success. Your role is $role')),
+      // );
 
       Navigator.pushReplacement(
         context,

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class TimetableListScreen extends StatelessWidget {
-  const TimetableListScreen({super.key});
+class TeacherAttendanceSelfView extends StatelessWidget {
+  const TeacherAttendanceSelfView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Timetables')),
+      appBar: AppBar(title: const Text('Self View - Teacher Attendance')),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
