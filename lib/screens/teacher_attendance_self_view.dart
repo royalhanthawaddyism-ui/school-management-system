@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,14 +13,16 @@ class TeacherAttendanceSelfView extends StatefulWidget {
 
 class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
   // Set school coordinates and distance constraint
-  final double schoolLat = 17.309569;
-  final double schoolLng = 96.465086;
+  final double schoolLat = 17.3095073;
+  final double schoolLng = 96.4650853;
   final double maxAllowedDistanceMeters = 100.0;
 
   bool isWithinRange = false;
   bool isCheckedIn = false;
   bool isCheckedOut = false;
   bool isLoading = true;
+  bool isFetchingLocation = false;
+  double? currentDistanceMeters;
   DateTime? checkInTime;
   Timer? _timer;
 
@@ -72,7 +73,6 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
     try {
       inRange = await _checkGeofence();
     } catch (e) {
-      if (kDebugMode) debugPrint("❌ Geofence Refresh Exception: $e");
       inRange = false;
     }
 
@@ -82,46 +82,44 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
         isCheckedOut = savedCheckedOut;
         checkInTime = savedTime;
         isWithinRange = inRange;
-        isLoading = false; // Always disable loading screen when done
+        isLoading = false;
       });
     }
   }
 
   Future<bool> _checkGeofence() async {
-    // Check if location services (GPS) are enabled on the device
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      if (kDebugMode)
-        debugPrint(
-          "❌ Geofence Error: Location services are DISABLED on device.",
-        );
-      return false;
-    }
+    if (isFetchingLocation) return isWithinRange;
+    isFetchingLocation = true;
 
-    // Check permissions
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        if (kDebugMode)
-          debugPrint("❌ Geofence Error: Location permission DENIED by user.");
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
         return false;
       }
-    }
 
-    if (permission == LocationPermission.deniedForever) {
-      if (kDebugMode)
-        debugPrint("❌ Geofence Error: Location permission DENIED PERMANENTLY.");
-      return false;
-    }
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return false;
+        }
+      }
 
-    // Fetch position with timeout safety
-    try {
+      if (permission == LocationPermission.deniedForever) {
+        return false;
+      }
+
+      // Android သီးသန့် Hardware GPS Direct Settings
+      final androidSettings = AndroidSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 0,
+        forceLocationManager:
+            true, // Device GPS Hardware ကို တိုက်ရိုက် သုံးခိုင်းခြင်း
+      );
+
+      // Current Position ရယူခြင်း
       Position position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
-        ),
+        locationSettings: androidSettings,
       );
 
       double distance = Geolocator.distanceBetween(
@@ -131,22 +129,33 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
         schoolLng,
       );
 
-      if (kDebugMode) {
-        debugPrint("----------------------------------------");
-        debugPrint(
-          "📍 User Location: ${position.latitude}, ${position.longitude}",
-        );
-        debugPrint("🏫 School Location: $schoolLat, $schoolLng");
-        debugPrint(
-          "📏 Distance to School: ${distance.toStringAsFixed(2)} meters",
-        );
-        debugPrint("----------------------------------------");
+      print('Current Lat/Lng: ${position.latitude}, ${position.longitude}');
+      print('Accuracy Margin: ${position.accuracy} meters');
+
+      if (mounted) {
+        setState(() {
+          currentDistanceMeters = distance;
+        });
       }
 
       return distance <= maxAllowedDistanceMeters;
     } catch (e) {
-      if (kDebugMode) debugPrint("❌ Geofence Error during position fetch: $e");
+      debugPrint('Error obtaining location: $e');
       return false;
+    } finally {
+      isFetchingLocation = false;
+    }
+  }
+
+  String _getDistanceText() {
+    if (currentDistanceMeters == null) {
+      return "Fetching distance...";
+    }
+    if (currentDistanceMeters! >= 1000) {
+      double km = currentDistanceMeters! / 1000;
+      return "You are ${km.toStringAsFixed(2)} km away from school.";
+    } else {
+      return "You are ${currentDistanceMeters!.toStringAsFixed(0)} meters away from school.";
     }
   }
 
@@ -177,7 +186,6 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
   Widget build(BuildContext context) {
     final now = DateTime.now();
 
-    // Evaluate if 45 minutes have elapsed since Check In
     bool canCheckOut = false;
     int remainingMinutes = 45;
 
@@ -187,7 +195,6 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
       remainingMinutes = (45 - elapsedMinutes).clamp(0, 45);
     }
 
-    // Determine visibility rules
     bool showCheckInButton = isWithinRange && !isCheckedIn;
     bool showCheckOutButton =
         isWithinRange && isCheckedIn && canCheckOut && !isCheckedOut;
@@ -205,7 +212,6 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Location Status Card
                   Card(
                     color: isWithinRange
                         ? Colors.green.shade50
@@ -239,16 +245,16 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
                     ),
                   ),
                   const SizedBox(height: 32),
-
-                  // Out of Range Message
                   if (!isWithinRange)
-                    const Text(
-                      "Buttons are hidden because you are not within 100 meters of the school.",
+                    Text(
+                      _getDistanceText(),
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
+                      style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-
-                  // Check In Button
                   if (showCheckInButton)
                     ElevatedButton.icon(
                       onPressed: _handleCheckIn,
@@ -260,8 +266,6 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                     ),
-
-                  // Waiting Period Message (Checked In, but under 45 minutes)
                   if (isWithinRange &&
                       isCheckedIn &&
                       !canCheckOut &&
@@ -282,8 +286,6 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
                       style: const TextStyle(color: Colors.grey),
                     ),
                   ],
-
-                  // Check Out Button
                   if (showCheckOutButton)
                     ElevatedButton.icon(
                       onPressed: _handleCheckOut,
@@ -295,8 +297,6 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                     ),
-
-                  // Completed Day Message
                   if (isCheckedOut)
                     const Text(
                       "Attendance Completed for Today!",
