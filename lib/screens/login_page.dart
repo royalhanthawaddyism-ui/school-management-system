@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hism_management_system/controllers/login_controller.dart';
 import 'package:hism_management_system/screens/home_page.dart';
 import 'package:hism_management_system/services/parent_service.dart';
+import 'package:hism_management_system/services/remember_me_storage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,6 +18,28 @@ class _LoginPageState extends State<LoginPage> {
   final _controller = LoginController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLogin();
+  }
+
+  Future<void> _loadSavedLogin() async {
+    final savedCredentials = await RememberMeStorage.loadCredentials();
+    final shouldRemember = await RememberMeStorage.isRememberMeEnabled();
+
+    if (!mounted) return;
+
+    setState(() {
+      _rememberMe = shouldRemember;
+      if (shouldRemember) {
+        _emailController.text = savedCredentials['email'] ?? '';
+        _passwordController.text = savedCredentials['password'] ?? '';
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -40,6 +63,12 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (!mounted) return;
+
+      await RememberMeStorage.saveCredentials(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        rememberMe: _rememberMe,
+      );
 
       final role = profile?['role']?.toString() ?? 'user';
       final profileId = profile?['id']?.toString() ?? '';
@@ -176,6 +205,27 @@ class _LoginPageState extends State<LoginPage> {
                           onFieldSubmitted: (_) => _submitLogin(),
                         ),
                         const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: _rememberMe,
+                              onChanged: _isLoading
+                                  ? null
+                                  : (value) {
+                                      setState(() {
+                                        _rememberMe = value ?? false;
+                                      });
+                                    },
+                            ),
+                            const Expanded(
+                              child: Text(
+                                'Remember me',
+                                style: TextStyle(fontSize: 15),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
                         ElevatedButton(
                           onPressed: _isLoading
                               ? null

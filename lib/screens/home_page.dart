@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:hism_management_system/screens/profile_list_screen.dart';
 import 'package:hism_management_system/screens/teacher_attendance_admin_view.dart';
+import 'package:hism_management_system/screens/timetables_screen.dart';
 import 'package:hism_management_system/setup/setup_list_screen.dart';
 import 'package:hism_management_system/screens/setting_screen.dart';
 import 'package:hism_management_system/screens/student_list_screen.dart';
@@ -97,7 +98,7 @@ class _HomeTab extends StatelessWidget {
       _MenuItem(
         icon: Icons.calendar_month,
         label: 'Timetables',
-        destination: const TeacherAttendanceSelfView(),
+        destination: const TimetablesScreen(),
       ),
       if (role != '3')
         _MenuItem(

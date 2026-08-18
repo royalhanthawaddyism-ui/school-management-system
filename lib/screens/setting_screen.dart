@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hism_management_system/screens/login_page.dart';
+import 'package:hism_management_system/services/remember_me_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -48,6 +49,7 @@ class _SettingScreenState extends State<SettingScreen> {
 
   Future<void> _handleLogout() async {
     try {
+      await RememberMeStorage.clearCredentials();
       await supabase.auth.signOut();
 
       if (mounted) {
