@@ -129,9 +129,6 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
         schoolLng,
       );
 
-      print('Current Lat/Lng: ${position.latitude}, ${position.longitude}');
-      print('Accuracy Margin: ${position.accuracy} meters');
-
       if (mounted) {
         setState(() {
           currentDistanceMeters = distance;
