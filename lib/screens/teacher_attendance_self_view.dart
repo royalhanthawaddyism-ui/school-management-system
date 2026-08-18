@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:hism_management_system/controllers/teacher_attendance_controller.dart';
 
 class TeacherAttendanceSelfView extends StatefulWidget {
   const TeacherAttendanceSelfView({super.key});
@@ -12,196 +12,80 @@ class TeacherAttendanceSelfView extends StatefulWidget {
 }
 
 class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
-  // Set school coordinates and distance constraint
-  final double schoolLat = 17.3095073;
-  final double schoolLng = 96.4650853;
-  final double maxAllowedDistanceMeters = 100.0;
-
-  bool isWithinRange = false;
-  bool isCheckedIn = false;
-  bool isCheckedOut = false;
-  bool isLoading = true;
-  bool isFetchingLocation = false;
-  double? currentDistanceMeters;
-  DateTime? checkInTime;
-  Timer? _timer;
+  late final TeacherAttendanceController _controller;
+  late final String _teacherProfileId;
+  Timer? _uiTimer;
 
   @override
   void initState() {
     super.initState();
-    _refreshState();
-    // Periodically update location and state (every 10 seconds)
-    _timer = Timer.periodic(
-      const Duration(seconds: 10),
-      (_) => _refreshState(),
-    );
+    _controller = TeacherAttendanceController();
+    _controller.addListener(_onControllerUpdate);
+
+    _teacherProfileId = Supabase.instance.client.auth.currentUser?.id ?? '';
+    _controller.init(_teacherProfileId);
+
+    _uiTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted && _controller.isCheckedIn && !_controller.isCheckedOut) {
+        setState(() {});
+      }
+    });
+  }
+
+  void _onControllerUpdate() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _uiTimer?.cancel();
+    _controller.removeListener(_onControllerUpdate);
+    _controller.dispose();
     super.dispose();
-  }
-
-  Future<void> _refreshState() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now();
-
-    // 1. Reset state after 00:00 AM (Midnight)
-    final lastResetDateStr = prefs.getString('last_reset_date');
-    final currentDateStr = "${now.year}-${now.month}-${now.day}";
-
-    if (lastResetDateStr != currentDateStr) {
-      await prefs.setBool('is_checked_in', false);
-      await prefs.setBool('is_checked_out', false);
-      await prefs.remove('check_in_timestamp');
-      await prefs.setString('last_reset_date', currentDateStr);
-    }
-
-    // 2. Fetch stored attendance states
-    final savedCheckedIn = prefs.getBool('is_checked_in') ?? false;
-    final savedCheckedOut = prefs.getBool('is_checked_out') ?? false;
-    final savedCheckInMs = prefs.getInt('check_in_timestamp');
-
-    DateTime? savedTime;
-    if (savedCheckInMs != null) {
-      savedTime = DateTime.fromMillisecondsSinceEpoch(savedCheckInMs);
-    }
-
-    // 3. Verify Geofence with safety error handling
-    bool inRange = false;
-    try {
-      inRange = await _checkGeofence();
-    } catch (e) {
-      inRange = false;
-    }
-
-    if (mounted) {
-      setState(() {
-        isCheckedIn = savedCheckedIn;
-        isCheckedOut = savedCheckedOut;
-        checkInTime = savedTime;
-        isWithinRange = inRange;
-        isLoading = false;
-      });
-    }
-  }
-
-  Future<bool> _checkGeofence() async {
-    if (isFetchingLocation) return isWithinRange;
-    isFetchingLocation = true;
-
-    try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        return false;
-      }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          return false;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        return false;
-      }
-
-      // Android သီးသန့် Hardware GPS Direct Settings
-      final androidSettings = AndroidSettings(
-        accuracy: LocationAccuracy.best,
-        distanceFilter: 0,
-        forceLocationManager:
-            true, // Device GPS Hardware ကို တိုက်ရိုက် သုံးခိုင်းခြင်း
-      );
-
-      // Current Position ရယူခြင်း
-      Position position = await Geolocator.getCurrentPosition(
-        locationSettings: androidSettings,
-      );
-
-      double distance = Geolocator.distanceBetween(
-        position.latitude,
-        position.longitude,
-        schoolLat,
-        schoolLng,
-      );
-
-      if (mounted) {
-        setState(() {
-          currentDistanceMeters = distance;
-        });
-      }
-
-      return distance <= maxAllowedDistanceMeters;
-    } catch (e) {
-      debugPrint('Error obtaining location: $e');
-      return false;
-    } finally {
-      isFetchingLocation = false;
-    }
-  }
-
-  String _getDistanceText() {
-    if (currentDistanceMeters == null) {
-      return "Fetching distance...";
-    }
-    if (currentDistanceMeters! >= 1000) {
-      double km = currentDistanceMeters! / 1000;
-      return "You are ${km.toStringAsFixed(2)} km away from school.";
-    } else {
-      return "You are ${currentDistanceMeters!.toStringAsFixed(0)} meters away from school.";
-    }
-  }
-
-  Future<void> _handleCheckIn() async {
-    final prefs = await SharedPreferences.getInstance();
-    final now = DateTime.now();
-
-    await prefs.setBool('is_checked_in', true);
-    await prefs.setInt('check_in_timestamp', now.millisecondsSinceEpoch);
-
-    setState(() {
-      isCheckedIn = true;
-      checkInTime = now;
-    });
-  }
-
-  Future<void> _handleCheckOut() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    await prefs.setBool('is_checked_out', true);
-
-    setState(() {
-      isCheckedOut = true;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-
     bool canCheckOut = false;
     int remainingMinutes = 45;
+    int remainingSeconds = 0;
 
-    if (checkInTime != null) {
-      final elapsedMinutes = now.difference(checkInTime!).inMinutes;
-      canCheckOut = elapsedMinutes >= 45;
-      remainingMinutes = (45 - elapsedMinutes).clamp(0, 45);
+    if (_controller.currentRecord?.checkIn != null) {
+      final adjustedCheckIn = _controller.currentRecord!.checkIn.subtract(
+        const Duration(minutes: 390),
+      );
+
+      final elapsedDuration = now.difference(adjustedCheckIn);
+      const totalRequiredDuration = Duration(minutes: 45);
+
+      if (elapsedDuration >= totalRequiredDuration) {
+        canCheckOut = true;
+        remainingMinutes = 0;
+        remainingSeconds = 0;
+      } else {
+        canCheckOut = false;
+        final remainingDuration = totalRequiredDuration - elapsedDuration;
+
+        remainingMinutes = remainingDuration.inMinutes;
+        remainingSeconds = remainingDuration.inSeconds % 60;
+      }
     }
 
-    bool showCheckInButton = isWithinRange && !isCheckedIn;
+    bool showCheckInButton =
+        _controller.isWithinRange && !_controller.isCheckedIn;
     bool showCheckOutButton =
-        isWithinRange && isCheckedIn && canCheckOut && !isCheckedOut;
+        _controller.isWithinRange &&
+        _controller.isCheckedIn &&
+        canCheckOut &&
+        !_controller.isCheckedOut;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Teacher Attendance'),
         centerTitle: true,
       ),
-      body: isLoading
+      body: _controller.isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
               padding: const EdgeInsets.all(24.0),
@@ -210,7 +94,7 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Card(
-                    color: isWithinRange
+                    color: _controller.isWithinRange
                         ? Colors.green.shade50
                         : Colors.red.shade50,
                     child: Padding(
@@ -218,19 +102,21 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
                       child: Row(
                         children: [
                           Icon(
-                            isWithinRange
+                            _controller.isWithinRange
                                 ? Icons.location_on
                                 : Icons.location_off,
-                            color: isWithinRange ? Colors.green : Colors.red,
+                            color: _controller.isWithinRange
+                                ? Colors.green
+                                : Colors.red,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              isWithinRange
+                              _controller.isWithinRange
                                   ? "Within School Range (≤ 100m)"
                                   : "Outside School Range (> 100m)",
                               style: TextStyle(
-                                color: isWithinRange
+                                color: _controller.isWithinRange
                                     ? Colors.green.shade900
                                     : Colors.red.shade900,
                                 fontWeight: FontWeight.bold,
@@ -242,9 +128,9 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  if (!isWithinRange)
+                  if (!_controller.isWithinRange)
                     Text(
-                      _getDistanceText(),
+                      _controller.getDistanceText(),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Colors.redAccent,
@@ -254,19 +140,34 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
                     ),
                   if (showCheckInButton)
                     ElevatedButton.icon(
-                      onPressed: _handleCheckIn,
+                      onPressed: _controller.isSubmitting
+                          ? null
+                          : () async {
+                              await _controller.handleCheckIn(
+                                _teacherProfileId,
+                              );
+                            },
                       icon: const Icon(Icons.login),
-                      label: const Text('Check In'),
+                      label: _controller.isSubmitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('Check In'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                     ),
-                  if (isWithinRange &&
-                      isCheckedIn &&
+                  if (_controller.isWithinRange &&
+                      _controller.isCheckedIn &&
                       !canCheckOut &&
-                      !isCheckedOut) ...[
+                      !_controller.isCheckedOut) ...[
                     const Text(
                       "Checked In Successfully",
                       textAlign: TextAlign.center,
@@ -278,23 +179,40 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      "Check Out available in: $remainingMinutes minute(s)",
+                      "Check Out available in: ${remainingMinutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}",
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.grey),
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                   if (showCheckOutButton)
                     ElevatedButton.icon(
-                      onPressed: _handleCheckOut,
+                      onPressed: _controller.isSubmitting
+                          ? null
+                          : () async {
+                              await _controller.handleCheckOut();
+                            },
                       icon: const Icon(Icons.logout),
-                      label: const Text('Check Out'),
+                      label: _controller.isSubmitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('Check Out'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.orange,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                     ),
-                  if (isCheckedOut)
+                  if (_controller.isCheckedOut)
                     const Text(
                       "Attendance Completed for Today!",
                       textAlign: TextAlign.center,
