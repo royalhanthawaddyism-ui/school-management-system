@@ -29,8 +29,21 @@ class TeacherAttendanceController extends ChangeNotifier {
   Timer? _timer;
 
   List<DateTime> _getDaysInMonth(int year, int month) {
-    final lastDay = DateTime(year, month + 1, 0).day;
-    return List.generate(lastDay, (index) => DateTime(year, month, index + 1));
+    final now = DateTime.now();
+    int maxDay;
+
+    if (year == now.year && month == now.month) {
+      maxDay = now.day;
+    } else {
+      maxDay = DateTime(year, month + 1, 0).day;
+    }
+
+    final days = List.generate(
+      maxDay,
+      (index) => DateTime(year, month, index + 1),
+    );
+
+    return days.reversed.toList();
   }
 
   void setMonth(int month) {

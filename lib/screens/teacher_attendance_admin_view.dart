@@ -37,25 +37,28 @@ class _TeacherAttendanceAdminViewState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Teacher Attendance Admin View'),
+        title: const Text('Teacher Attendance'),
         centerTitle: true,
       ),
       body: Column(
         children: [
-          // ----------------- Top Header Section (Month/Year Picker + Search) -----------------
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12.0,
+              vertical: 12.0,
+            ),
             child: Row(
               children: [
-                // Month Dropdown
                 Expanded(
+                  flex: 5,
                   child: DropdownButtonFormField<int>(
+                    isExpanded: true,
                     initialValue: _controller.selectedMonth,
                     decoration: const InputDecoration(
                       labelText: 'Month',
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
+                        horizontal: 8,
                         vertical: 12,
                       ),
                     ),
@@ -65,6 +68,8 @@ class _TeacherAttendanceAdminViewState
                         value: monthNum,
                         child: Text(
                           DateFormat('MMMM').format(DateTime(0, monthNum)),
+                          style: const TextStyle(fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       );
                     }),
@@ -73,17 +78,19 @@ class _TeacherAttendanceAdminViewState
                     },
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 6),
 
                 // Year Dropdown
                 Expanded(
+                  flex: 4,
                   child: DropdownButtonFormField<int>(
+                    isExpanded: true,
                     initialValue: _controller.selectedYear,
                     decoration: const InputDecoration(
                       labelText: 'Year',
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
+                        horizontal: 8,
                         vertical: 12,
                       ),
                     ),
@@ -91,7 +98,11 @@ class _TeacherAttendanceAdminViewState
                       int yearNum = DateTime.now().year - 2 + index;
                       return DropdownMenuItem(
                         value: yearNum,
-                        child: Text(yearNum.toString()),
+                        child: Text(
+                          yearNum.toString(),
+                          style: const TextStyle(fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       );
                     }),
                     onChanged: (val) {
@@ -99,24 +110,28 @@ class _TeacherAttendanceAdminViewState
                     },
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 6),
 
                 // Search Button
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 16,
+                SizedBox(
+                  height: 48,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
+                    onPressed: () async {
+                      await _controller.fetchMonthlyAttendance();
+                      if (!mounted || _controller.errorMessage == null) return;
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(_controller.errorMessage!)),
+                      );
+                    },
+                    child: const Icon(Icons.search, size: 20),
                   ),
-                  onPressed: () async {
-                    await _controller.fetchMonthlyAttendance();
-                    if (!mounted || _controller.errorMessage == null) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(_controller.errorMessage!)),
-                    );
-                  },
-                  child: const Icon(Icons.search),
                 ),
               ],
             ),

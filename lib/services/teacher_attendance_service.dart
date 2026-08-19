@@ -25,7 +25,7 @@ class TeacherAttendanceService {
         .select('*, profiles:teacher_profile_id(email)')
         .gte('attendance_date', startDate)
         .lte('attendance_date', endDate)
-        .order('attendance_date', ascending: true);
+        .order('attendance_date', ascending: false);
 
     return (response as List)
         .map((data) => TeacherAttendanceModel.fromJson(data))

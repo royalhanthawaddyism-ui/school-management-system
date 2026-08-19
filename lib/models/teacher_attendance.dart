@@ -52,8 +52,13 @@ class TeacherAttendanceModel {
   factory TeacherAttendanceModel.fromJson(Map<String, dynamic> json) {
     DateTime parseDate(dynamic value) {
       if (value == null) return DateTime.now();
-      final parsed = DateTime.tryParse(value.toString());
-      return parsed == null ? DateTime.now() : parsed.toLocal();
+
+      String dateStr = value.toString();
+      if (dateStr.contains('T')) {
+        dateStr = dateStr.split('+').first.replaceAll('Z', '');
+      }
+
+      return DateTime.tryParse(dateStr) ?? DateTime.now();
     }
 
     String? extractedEmail;
