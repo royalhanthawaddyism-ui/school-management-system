@@ -49,9 +49,15 @@ class _ProfileListScreenState extends State<ProfileListScreen> {
 
       setState(() {
         _profiles = data;
-        _filteredProfiles = data;
+        // Reset filter checkboxes to checked on every load/refresh
+        _filterAdmin = true;
+        _filterTeacher = true;
+        _filterParent = true;
         _isLoading = false;
       });
+
+      // Re-apply filters so the displayed list matches the reset checkbox states and search query
+      applyFilters();
     } catch (e) {
       if (!mounted) return;
 

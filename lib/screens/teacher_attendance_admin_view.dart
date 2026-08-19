@@ -94,7 +94,7 @@ class _TeacherAttendanceAdminViewState
                         vertical: 12,
                       ),
                     ),
-                    items: List.generate(5, (index) {
+                    items: List.generate(3, (index) {
                       int yearNum = DateTime.now().year - 2 + index;
                       return DropdownMenuItem(
                         value: yearNum,
