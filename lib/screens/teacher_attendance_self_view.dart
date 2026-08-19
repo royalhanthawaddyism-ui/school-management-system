@@ -52,11 +52,11 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
     int remainingSeconds = 0;
 
     if (_controller.currentRecord?.checkIn != null) {
-      final adjustedCheckIn = _controller.currentRecord!.checkIn.subtract(
-        const Duration(minutes: 390),
-      );
+      // FIX 1: Convert Supabase UTC timestamp to local time automatically.
+      // Remove manual subtract(Duration(minutes: 390)).
+      final checkInTime = _controller.currentRecord!.checkIn.toLocal();
 
-      final elapsedDuration = now.difference(adjustedCheckIn);
+      final elapsedDuration = now.difference(checkInTime);
       const totalRequiredDuration = Duration(minutes: 45);
 
       if (elapsedDuration >= totalRequiredDuration) {
@@ -67,13 +67,21 @@ class _TeacherAttendanceSelfViewState extends State<TeacherAttendanceSelfView> {
         canCheckOut = false;
         final remainingDuration = totalRequiredDuration - elapsedDuration;
 
-        remainingMinutes = remainingDuration.inMinutes;
-        remainingSeconds = remainingDuration.inSeconds % 60;
+        // Ensure countdown doesn't show negative values
+        if (remainingDuration.isNegative) {
+          canCheckOut = true;
+          remainingMinutes = 0;
+          remainingSeconds = 0;
+        } else {
+          remainingMinutes = remainingDuration.inMinutes;
+          remainingSeconds = remainingDuration.inSeconds % 60;
+        }
       }
     }
 
     bool showCheckInButton =
         _controller.isWithinRange && !_controller.isCheckedIn;
+
     bool showCheckOutButton =
         _controller.isWithinRange &&
         _controller.isCheckedIn &&
