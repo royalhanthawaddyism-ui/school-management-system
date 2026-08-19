@@ -1,6 +1,7 @@
 class TeacherAttendanceModel {
   final String? id;
   final String teacherProfileId;
+  final String? email;
   final DateTime attendanceDate;
   final DateTime checkIn;
   final DateTime? checkOut;
@@ -9,13 +10,13 @@ class TeacherAttendanceModel {
   TeacherAttendanceModel({
     this.id,
     required this.teacherProfileId,
+    this.email,
     required this.attendanceDate,
     required this.checkIn,
     this.checkOut,
     this.createdAt,
   });
 
-  // Supabase သို့ Check In ထည့်သွင်းရန်
   Map<String, dynamic> toInsertJson() {
     return {
       'teacher_profile_id': teacherProfileId,
@@ -24,15 +25,14 @@ class TeacherAttendanceModel {
     };
   }
 
-  // Supabase သို့ Check Out ပြင်ဆင်ရန်
   Map<String, dynamic> toUpdateCheckoutJson(DateTime checkOutTime) {
     return {'check_out': checkOutTime.toIso8601String()};
   }
 
-  // State update ပြုလုပ်ရန် copyWith method
   TeacherAttendanceModel copyWith({
     String? id,
     String? teacherProfileId,
+    String? email,
     DateTime? attendanceDate,
     DateTime? checkIn,
     DateTime? checkOut,
@@ -41,6 +41,7 @@ class TeacherAttendanceModel {
     return TeacherAttendanceModel(
       id: id ?? this.id,
       teacherProfileId: teacherProfileId ?? this.teacherProfileId,
+      email: email ?? this.email,
       attendanceDate: attendanceDate ?? this.attendanceDate,
       checkIn: checkIn ?? this.checkIn,
       checkOut: checkOut ?? this.checkOut,
@@ -55,10 +56,15 @@ class TeacherAttendanceModel {
       return parsed == null ? DateTime.now() : parsed.toLocal();
     }
 
+    String? extractedEmail;
+    if (json['profiles'] != null && json['profiles'] is Map) {
+      extractedEmail = json['profiles']['email']?.toString();
+    }
+
     return TeacherAttendanceModel(
-      // int (BigInt) primary key များကို String သို့ လုံခြုံစွာ ပြောင်းလဲခြင်း
       id: json['id']?.toString(),
       teacherProfileId: json['teacher_profile_id'].toString(),
+      email: extractedEmail,
       attendanceDate: parseDate(json['attendance_date']),
       checkIn: parseDate(json['check_in']),
       checkOut: json['check_out'] != null ? parseDate(json['check_out']) : null,

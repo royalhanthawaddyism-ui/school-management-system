@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:hism_management_system/models/teacher_attendance.dart';
 import 'package:hism_management_system/services/teacher_attendance_service.dart';
 
@@ -14,13 +15,60 @@ class TeacherAttendanceController extends ChangeNotifier {
   bool isWithinRange = false;
   bool isCheckedIn = false;
   bool isCheckedOut = false;
-  bool isLoading = true;
+  bool isLoading = false;
   bool isFetchingLocation = false;
   bool isSubmitting = false;
 
   double? currentDistanceMeters;
   TeacherAttendanceModel? currentRecord;
+  int selectedMonth = DateTime.now().month;
+  int selectedYear = DateTime.now().year;
+  List<DateTime> daysInMonth = [];
+  Map<String, List<TeacherAttendanceModel>> attendanceMap = {};
+  String? errorMessage;
   Timer? _timer;
+
+  List<DateTime> _getDaysInMonth(int year, int month) {
+    final lastDay = DateTime(year, month + 1, 0).day;
+    return List.generate(lastDay, (index) => DateTime(year, month, index + 1));
+  }
+
+  void setMonth(int month) {
+    selectedMonth = month;
+    notifyListeners();
+  }
+
+  void setYear(int year) {
+    selectedYear = year;
+    notifyListeners();
+  }
+
+  Future<void> fetchMonthlyAttendance() async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      final fetchedRecords = await _service.fetchAttendanceForMonth(
+        selectedYear,
+        selectedMonth,
+      );
+      final groupedRecords = <String, List<TeacherAttendanceModel>>{};
+
+      for (final record in fetchedRecords) {
+        final dateKey = DateFormat('yyyy-MM-dd').format(record.attendanceDate);
+        groupedRecords.putIfAbsent(dateKey, () => []).add(record);
+      }
+
+      daysInMonth = _getDaysInMonth(selectedYear, selectedMonth);
+      attendanceMap = groupedRecords;
+    } catch (e) {
+      errorMessage = 'Error fetching attendance: $e';
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
 
   void init(String teacherProfileId) {
     refreshState(teacherProfileId);
@@ -37,6 +85,8 @@ class TeacherAttendanceController extends ChangeNotifier {
   }
 
   Future<void> refreshState(String teacherProfileId) async {
+    isLoading = true;
+    notifyListeners();
     final now = DateTime.now();
     final todayStr = now.toIso8601String().split('T').first;
 
