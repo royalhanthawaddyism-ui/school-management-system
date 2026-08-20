@@ -59,17 +59,21 @@ class TeacherAttendanceService {
     return TeacherAttendanceModel.fromJson(response);
   }
 
-  Future<void> updateCheckOut(
-    TeacherAttendanceModel model,
-    DateTime checkOutTime,
-  ) async {
+  Future<void> updateCheckOut(TeacherAttendanceModel model) async {
     if (model.id == null) return;
 
     final dynamic parsedId = int.tryParse(model.id!) ?? model.id;
 
+    final serverTimeResponse = await _supabase.rpc('get_server_utc_time');
+    final DateTime serverUtcTime = DateTime.parse(
+      serverTimeResponse.toString(),
+    );
+
+    final updateData = model.toUpdateCheckoutJson(serverUtcTime);
+
     await _supabase
         .from('teacher_attendance')
-        .update(model.toUpdateCheckoutJson(checkOutTime))
+        .update(updateData)
         .eq('id', parsedId);
   }
 }

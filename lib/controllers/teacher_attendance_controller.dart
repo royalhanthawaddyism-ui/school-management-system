@@ -196,7 +196,7 @@ class TeacherAttendanceController extends ChangeNotifier {
 
     try {
       final now = DateTime.now();
-      await _service.updateCheckOut(currentRecord!, now);
+      await _service.updateCheckOut(currentRecord!);
 
       currentRecord = currentRecord!.copyWith(checkOut: now);
       isCheckedOut = true;

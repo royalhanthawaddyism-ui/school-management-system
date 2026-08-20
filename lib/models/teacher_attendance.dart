@@ -18,15 +18,15 @@ class TeacherAttendanceModel {
   });
 
   Map<String, dynamic> toInsertJson() {
-    return {
-      'teacher_profile_id': teacherProfileId,
-      'attendance_date': attendanceDate.toIso8601String().split('T').first,
-      'check_in': checkIn.toIso8601String(),
-    };
+    return {'teacher_profile_id': teacherProfileId};
   }
 
-  Map<String, dynamic> toUpdateCheckoutJson(DateTime checkOutTime) {
-    return {'check_out': checkOutTime.toIso8601String()};
+  Map<String, dynamic> toUpdateCheckoutJson(DateTime serverUtcTime) {
+    final mmTime = serverUtcTime.toUtc().add(
+      const Duration(hours: 6, minutes: 30),
+    );
+
+    return {'check_out': mmTime.toIso8601String()};
   }
 
   TeacherAttendanceModel copyWith({
