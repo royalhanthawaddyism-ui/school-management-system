@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hism_management_system/screens/admin_announcement_list_screen.dart';
 
 import 'package:hism_management_system/screens/profile_list_screen.dart';
 import 'package:hism_management_system/screens/teacher_attendance_admin_view.dart';
@@ -108,6 +109,11 @@ class _HomeTab extends StatelessWidget {
               ? const TeacherAttendanceAdminView()
               : const TeacherAttendanceSelfView(),
         ),
+      _MenuItem(
+        icon: Icons.notifications,
+        label: 'Notifications',
+        destination: const AdminAnnouncementListScreen(),
+      ),
       _MenuItem(
         icon: Icons.settings,
         label: 'Setting',
