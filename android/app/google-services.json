@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "384672935651",
+    "project_id": "hism-management-system-492fc",
+    "storage_bucket": "hism-management-system-492fc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:384672935651:android:879d94cd0f67f399bb5fd6",
+        "android_client_info": {
+          "package_name": "com.example.hism_management_system"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLM_LpE3sJ8lNE852LOZVLWWvgr97Adj4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

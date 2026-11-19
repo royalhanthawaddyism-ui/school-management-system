@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hism_management_system/controllers/login_controller.dart';
 import 'package:hism_management_system/screens/home_page.dart';
+import 'package:hism_management_system/services/device_token_service.dart';
 import 'package:hism_management_system/services/parent_service.dart';
 import 'package:hism_management_system/services/remember_me_storage.dart';
 
@@ -63,6 +66,8 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (!mounted) return;
+
+      unawaited(DeviceTokenService.instance.syncTokenForCurrentUser());
 
       await RememberMeStorage.saveCredentials(
         email: _emailController.text.trim(),
