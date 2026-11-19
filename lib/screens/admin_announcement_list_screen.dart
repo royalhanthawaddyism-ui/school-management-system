@@ -33,7 +33,7 @@ class _AdminAnnouncementListScreenState extends State<AdminAnnouncementListScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Admin Announcements')),
+      appBar: AppBar(title: const Text('School Notices')),
       body: StreamBuilder<List<Announcement>>(
         stream: _controller.fetchAnnouncements(),
         builder: (context, snapshot) {

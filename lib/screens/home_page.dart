@@ -111,7 +111,7 @@ class _HomeTab extends StatelessWidget {
         ),
       _MenuItem(
         icon: Icons.notifications,
-        label: 'Notifications',
+        label: 'School Notices',
         destination: const AdminAnnouncementListScreen(),
       ),
       _MenuItem(
