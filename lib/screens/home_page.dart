@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hism_management_system/screens/admin_announcement_list_screen.dart';
 
 import 'package:hism_management_system/screens/profile_list_screen.dart';
@@ -9,6 +10,7 @@ import 'package:hism_management_system/screens/setting_screen.dart';
 import 'package:hism_management_system/screens/student_list_screen.dart';
 import 'package:hism_management_system/screens/teacher_list_screen.dart';
 import 'package:hism_management_system/screens/teacher_attendance_self_view.dart';
+import 'package:hism_management_system/services/announcement_read_local_store.dart';
 
 class HomePage extends StatefulWidget {
   final String role;
@@ -20,10 +22,107 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
+  final AnnouncementReadLocalStore _announcementReadStore =
+      AnnouncementReadLocalStore();
+
   int _selectedIndex = 0;
+  bool _hasUnreadNotices = false;
+  List<DateTime> _latestAnnouncementDates = [];
 
   bool get isAdmin => widget.role == '1';
+
+  String? get _currentUserId =>
+      Supabase.instance.client.auth.currentUser?.id;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _loadUnreadAnnouncementStatus();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadUnreadAnnouncementStatus();
+    }
+  }
+
+  Future<void> _loadUnreadAnnouncementStatus() async {
+    final userId = _currentUserId;
+    if (userId == null || userId.isEmpty) return;
+
+    try {
+      final rows = await Supabase.instance.client
+          .from('announcements')
+          .select('created_at')
+          .order('created_at', ascending: false);
+
+      final createdAts = <DateTime>[];
+      for (final row in rows) {
+        final raw = row['created_at'];
+        if (raw is DateTime) {
+          createdAts.add(raw);
+        } else if (raw != null) {
+          final parsed = DateTime.tryParse(raw.toString());
+          if (parsed != null) createdAts.add(parsed);
+        }
+      }
+
+      final unread = await _announcementReadStore.hasUnreadAnnouncements(
+        userId: userId,
+        announcementCreatedAts: createdAts,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _latestAnnouncementDates = createdAts;
+        _hasUnreadNotices = unread;
+      });
+    } catch (_) {
+      // Network error ဖြစ်လျှင် existing badge state ကို ထိန်းထားမည်
+    }
+  }
+
+  Future<void> _openSchoolNotices() async {
+    final userId = _currentUserId;
+    if (userId != null && userId.isNotEmpty) {
+      DateTime? newestDate;
+      if (_latestAnnouncementDates.isNotEmpty) {
+        newestDate = _latestAnnouncementDates
+            .reduce((a, b) => a.isAfter(b) ? a : b);
+      }
+
+      await _announcementReadStore.markAllAsSeen(
+        userId,
+        latestTimestamp: newestDate,
+      );
+
+      if (mounted) {
+        setState(() {
+          _hasUnreadNotices = false;
+        });
+      }
+    }
+
+    if (!mounted) return;
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AdminAnnouncementListScreen(role: widget.role),
+      ),
+    );
+
+    if (!mounted) return;
+    await _loadUnreadAnnouncementStatus();
+  }
 
   List<String> get _pageTitles =>
       isAdmin ? _pageTitlesForAdmin : _pageTitlesForNormal;
@@ -32,7 +131,12 @@ class _HomePageState extends State<HomePage> {
       isAdmin ? _navigationItemsForAdmin : _navigationItemsForNormal;
 
   List<Widget> get _pages => [
-    _HomeTab(role: widget.role, parentId: widget.parentId),
+    _HomeTab(
+      role: widget.role,
+      parentId: widget.parentId,
+      hasUnreadNotices: _hasUnreadNotices,
+      onOpenSchoolNotices: _openSchoolNotices,
+    ),
     if (isAdmin) ProfileListScreen(),
     if (isAdmin) const SetupListScreen(),
   ];
@@ -80,8 +184,15 @@ class _HomePageState extends State<HomePage> {
 class _HomeTab extends StatelessWidget {
   final String role;
   final String? parentId;
+  final bool hasUnreadNotices;
+  final Future<void> Function() onOpenSchoolNotices;
 
-  const _HomeTab({required this.role, this.parentId});
+  const _HomeTab({
+    required this.role,
+    this.parentId,
+    required this.hasUnreadNotices,
+    required this.onOpenSchoolNotices,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +223,9 @@ class _HomeTab extends StatelessWidget {
       _MenuItem(
         icon: Icons.notifications,
         label: 'School Notices',
-        destination: const AdminAnnouncementListScreen(),
+        destination: AdminAnnouncementListScreen(role: role),
+        showBadge: hasUnreadNotices,
+        onTapOverride: onOpenSchoolNotices,
       ),
       _MenuItem(
         icon: Icons.settings,
@@ -148,11 +261,15 @@ class _MenuItem {
   final IconData icon;
   final String label;
   final Widget destination;
+  final bool showBadge;
+  final Future<void> Function()? onTapOverride;
 
   const _MenuItem({
     required this.icon,
     required this.label,
     required this.destination,
+    this.showBadge = false,
+    this.onTapOverride,
   });
 }
 
@@ -163,41 +280,85 @@ class _MenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(16),
-      elevation: 2,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => menuItem.destination),
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                menuItem.icon,
-                size: 36,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                menuItem.label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(
+          child: Material(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            elevation: 2,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () {
+                if (menuItem.onTapOverride != null) {
+                  menuItem.onTapOverride!();
+                  return;
+                }
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => menuItem.destination),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      menuItem.icon,
+                      size: 36,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      menuItem.label,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
-      ),
+        if (menuItem.showBadge)
+          Positioned(
+            top: -5,
+            right: -5,
+            child: IgnorePointer(
+              child: Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1.5),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 3,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  '!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    height: 1.0,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
