@@ -97,7 +97,7 @@ class _AdminAnnouncementAddScreenState
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _selectedTargetType,
+                initialValue: _selectedTargetType,
                 decoration: const InputDecoration(
                   labelText: 'Notification (Target Type)',
                 ),

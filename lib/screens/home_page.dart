@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hism_management_system/screens/admin_announcement_list_screen.dart';
+import 'package:hism_management_system/screens/group_chat_screen.dart';
 
 import 'package:hism_management_system/screens/profile_list_screen.dart';
 import 'package:hism_management_system/screens/teacher_attendance_admin_view.dart';
@@ -32,8 +33,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   bool get isAdmin => widget.role == '1';
 
-  String? get _currentUserId =>
-      Supabase.instance.client.auth.currentUser?.id;
+  String? get _currentUserId => Supabase.instance.client.auth.currentUser?.id;
 
   @override
   void initState() {
@@ -96,8 +96,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     if (userId != null && userId.isNotEmpty) {
       DateTime? newestDate;
       if (_latestAnnouncementDates.isNotEmpty) {
-        newestDate = _latestAnnouncementDates
-            .reduce((a, b) => a.isAfter(b) ? a : b);
+        newestDate = _latestAnnouncementDates.reduce(
+          (a, b) => a.isAfter(b) ? a : b,
+        );
       }
 
       await _announcementReadStore.markAllAsSeen(
@@ -226,6 +227,11 @@ class _HomeTab extends StatelessWidget {
         destination: AdminAnnouncementListScreen(role: role),
         showBadge: hasUnreadNotices,
         onTapOverride: onOpenSchoolNotices,
+      ),
+      const _MenuItem(
+        icon: Icons.groups,
+        label: 'Community',
+        destination: GroupChatScreen(),
       ),
       _MenuItem(
         icon: Icons.settings,
