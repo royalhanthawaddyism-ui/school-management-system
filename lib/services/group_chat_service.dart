@@ -1,6 +1,6 @@
 import 'dart:math';
-import 'dart:typed_data';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -13,6 +13,30 @@ class GroupChatService {
   final SupabaseClient _client;
 
   String? get currentUserId => _client.auth.currentUser?.id;
+
+  String? resolveImageUrl({String? imageUrl, String? imagePath}) {
+    final url = imageUrl?.trim();
+    if (url != null && url.isNotEmpty) return url;
+
+    final path = imagePath?.trim();
+    if (path == null || path.isEmpty) return null;
+    return _client.storage.from(_bucketName).getPublicUrl(path);
+  }
+
+  Future<Uint8List> downloadImage({String? imageUrl, String? imagePath}) async {
+    final path = imagePath?.trim();
+    if (path != null && path.isNotEmpty) {
+      return _client.storage.from(_bucketName).download(path);
+    }
+
+    final url = imageUrl?.trim();
+    if (url == null || url.isEmpty) {
+      throw ArgumentError('An image URL or storage path is required.');
+    }
+
+    final data = await NetworkAssetBundle(Uri.parse(url)).load(url);
+    return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+  }
 
   Stream<List<Map<String, dynamic>>> watchMessages() {
     return _client

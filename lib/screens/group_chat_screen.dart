@@ -1,6 +1,6 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:gal/gal.dart';
 import 'package:hism_management_system/services/group_chat_service.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -21,6 +21,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   Uint8List? _selectedImageBytes;
   bool _isSending = false;
+  final Set<String> _downloadingImageKeys = {};
 
   @override
   void initState() {
@@ -37,9 +38,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
   Future<void> _pickImage() async {
     try {
-      final image = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-      );
+      final image = await _imagePicker.pickImage(source: ImageSource.gallery);
       if (image == null) return;
 
       final bytes = await image.readAsBytes();
@@ -60,10 +59,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
 
     setState(() => _isSending = true);
     try {
-      await _service.sendMessage(
-        text: text,
-        imageBytes: imageBytes,
-      );
+      await _service.sendMessage(text: text, imageBytes: imageBytes);
       if (!mounted) return;
       _textController.clear();
       setState(() {
@@ -86,6 +82,37 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  Future<void> _downloadImage({
+    required String imageKey,
+    String? imageUrl,
+    String? imagePath,
+  }) async {
+    if (_downloadingImageKeys.contains(imageKey)) return;
+    setState(() => _downloadingImageKeys.add(imageKey));
+
+    try {
+      final imageBytes = await _service.downloadImage(
+        imageUrl: imageUrl,
+        imagePath: imagePath,
+      );
+      final hasAccess = await Gal.hasAccess(toAlbum: true);
+      if (!hasAccess) {
+        await Gal.requestAccess(toAlbum: true);
+      }
+      await Gal.putImageBytes(imageBytes, album: 'Group Chat');
+
+      if (!mounted) return;
+      _showMessage('Image saved to gallery.');
+    } catch (error) {
+      if (!mounted) return;
+      _showMessage('Unable to save image: $error');
+    } finally {
+      if (mounted) {
+        setState(() => _downloadingImageKeys.remove(imageKey));
+      }
+    }
+  }
+
   Widget _buildMessage(
     Map<String, dynamic> message, {
     required bool isMe,
@@ -94,10 +121,17 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     final content = message['content']?.toString().trim() ?? '';
     final imageDeleted = message['image_deleted'];
     final imageUrl = message['image_url']?.toString();
-    final hasImageUrl = imageUrl != null && imageUrl.isNotEmpty;
+    final imagePath = message['image_path']?.toString();
+    final resolvedImageUrl = _service.resolveImageUrl(
+      imageUrl: imageUrl,
+      imagePath: imagePath,
+    );
+    final imageKey = imagePath?.trim().isNotEmpty == true
+        ? 'path:${imagePath!.trim()}'
+        : 'url:${resolvedImageUrl ?? ''}';
+    final isDownloadingImage = _downloadingImageKeys.contains(imageKey);
     final senderEmail = message['sender_email']?.toString();
-    final senderName =
-        senderEmail?.replaceAll('@hism.school', '') ?? 'Unknown';
+    final senderName = senderEmail?.replaceAll('@hism.school', '') ?? 'Unknown';
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
@@ -111,51 +145,110 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text(senderName),
             ),
-          Card(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (content.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(content),
-                    ),
-                  if (imageDeleted == true)
-                    const Text(
-                      'Photo removed after 14 days',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
-                    )
-                  else if (imageDeleted == false && hasImageUrl)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        imageUrl,
-                        width: 240,
-                        height: 240,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, progress) {
-                          if (progress == null) return child;
-                          return const SizedBox(
-                            width: 240,
-                            height: 180,
-                            child: Center(
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          );
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * (2 / 3),
+            ),
+            child: Card(
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (content.isNotEmpty)
+                      GestureDetector(
+                        onLongPress: () {
+                          Clipboard.setData(ClipboardData(text: content));
+                          _showMessage('Copied to clipboard');
                         },
-                        errorBuilder: (context, error, stackTrace) =>
-                            const SizedBox(
-                              width: 240,
-                              height: 80,
-                              child: Center(child: Text('Photo unavailable')),
-                            ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Text(content),
+                        ),
                       ),
-                    ),
-                ],
+                    if (imageDeleted == true)
+                      const Text(
+                        'Photo removed after 14 days',
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      )
+                    else if (resolvedImageUrl != null)
+                      Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              resolvedImageUrl,
+                              width: 240,
+                              height: 240,
+                              fit: BoxFit.cover,
+                              loadingBuilder: (context, child, progress) {
+                                if (progress == null) return child;
+                                return const SizedBox(
+                                  width: 240,
+                                  height: 180,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const SizedBox(
+                                    width: 240,
+                                    height: 80,
+                                    child: Center(
+                                      child: Text('Photo unavailable'),
+                                    ),
+                                  ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                tooltip: 'Save image to gallery',
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints.tightFor(
+                                  width: 36,
+                                  height: 36,
+                                ),
+                                onPressed: isDownloadingImage
+                                    ? null
+                                    : () => _downloadImage(
+                                        imageKey: imageKey,
+                                        imageUrl: imageUrl,
+                                        imagePath: imagePath,
+                                      ),
+                                icon: isDownloadingImage
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.download,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
