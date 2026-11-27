@@ -12,6 +12,8 @@ class GroupChatService {
 
   final SupabaseClient _client;
 
+  String? get currentUserId => _client.auth.currentUser?.id;
+
   Stream<List<Map<String, dynamic>>> watchMessages() {
     return _client
         .from('group_messages')
@@ -33,10 +35,11 @@ class GroupChatService {
       throw ArgumentError.value(imageBytes, 'imageBytes', 'Must not be empty.');
     }
 
-    final senderId = _client.auth.currentUser?.id;
-    if (senderId == null) {
+    final user = _client.auth.currentUser;
+    if (user == null) {
       throw StateError('An authenticated user is required to send a message.');
     }
+    final senderId = user.id;
 
     String? imageUrl;
     String? imagePath;
@@ -72,6 +75,7 @@ class GroupChatService {
 
     await _client.from('group_messages').insert({
       'sender_id': senderId,
+      'sender_email': user.email,
       'content': hasText ? trimmedText : null,
       'image_path': imagePath,
       'image_url': imageUrl,

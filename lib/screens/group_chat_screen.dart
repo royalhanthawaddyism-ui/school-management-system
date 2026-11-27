@@ -70,6 +70,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
         _selectedImageBytes = null;
       });
     } catch (error) {
+      debugPrint('Unable to send group chat message: $error');
       if (!mounted) return;
       _showMessage('Unable to send message: $error');
     } finally {
@@ -85,61 +86,80 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Widget _buildMessage(Map<String, dynamic> message) {
+  Widget _buildMessage(
+    Map<String, dynamic> message, {
+    required bool isMe,
+    required bool showSenderName,
+  }) {
     final content = message['content']?.toString().trim() ?? '';
     final imageDeleted = message['image_deleted'];
     final imageUrl = message['image_url']?.toString();
     final hasImageUrl = imageUrl != null && imageUrl.isNotEmpty;
-
+    final senderEmail = message['sender_email']?.toString();
+    final senderName =
+        senderEmail?.replaceAll('@hism.school', '') ?? 'Unknown';
     return Align(
-      alignment: Alignment.centerLeft,
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (content.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(content),
-                ),
-              if (imageDeleted == true)
-                const Text(
-                  'Photo removed after 14 days',
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
-                )
-              else if (imageDeleted == false && hasImageUrl)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    imageUrl,
-                    width: 240,
-                    height: 240,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, progress) {
-                      if (progress == null) return child;
-                      return const SizedBox(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment: isMe
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showSenderName)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(senderName),
+            ),
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (content.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(content),
+                    ),
+                  if (imageDeleted == true)
+                    const Text(
+                      'Photo removed after 14 days',
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    )
+                  else if (imageDeleted == false && hasImageUrl)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        imageUrl,
                         width: 240,
-                        height: 180,
-                        child: Center(
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) =>
-                        const SizedBox(
-                          width: 240,
-                          height: 80,
-                          child: Center(child: Text('Photo unavailable')),
-                        ),
-                  ),
-                ),
-            ],
+                        height: 240,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const SizedBox(
+                            width: 240,
+                            height: 180,
+                            child: Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) =>
+                            const SizedBox(
+                              width: 240,
+                              height: 80,
+                              child: Center(child: Text('Photo unavailable')),
+                            ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -241,7 +261,7 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Group Chat')),
+      appBar: AppBar(title: const Text('RHISM Community Chat')),
       body: Column(
         children: [
           Expanded(
@@ -266,8 +286,27 @@ class _GroupChatScreenState extends State<GroupChatScreen> {
                 return ListView.builder(
                   reverse: true,
                   itemCount: messages.length,
-                  itemBuilder: (context, index) =>
-                      _buildMessage(messages[messages.length - 1 - index]),
+                  itemBuilder: (context, index) {
+                    final messageIndex = messages.length - 1 - index;
+                    final message = messages[messageIndex];
+                    final messageSenderId = message['sender_id'];
+                    final isMe =
+                        _service.currentUserId != null &&
+                        messageSenderId == _service.currentUserId;
+                    final messageAbove = messageIndex > 0
+                        ? messages[messageIndex - 1]
+                        : null;
+                    final showSenderName =
+                        !isMe &&
+                        (messageAbove == null ||
+                            messageAbove['sender_id'] != messageSenderId);
+
+                    return _buildMessage(
+                      message,
+                      isMe: isMe,
+                      showSenderName: showSenderName,
+                    );
+                  },
                 );
               },
             ),
